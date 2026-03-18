@@ -104,27 +104,39 @@
                             </div>
                             <div class="stat-info">
                                 <h3 style="color: var(--text-muted);">Active Sessions</h3>
-                                <p class="stat-value" style="color: var(--text-dark); font-size: 1.2rem;">154 <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">users online now</span></p>
+                                <p class="stat-value" style="color: var(--text-dark); font-size: 1.2rem;">154 <span
+                                        style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">users
+                                        online now</span></p>
                             </div>
                         </div>
                         <div class="stat-card"
                             style="background: var(--surface); color: var(--text-dark); border: 1px solid var(--border); flex-direction: column; align-items: flex-start; gap: 8px;">
                             <div style="display: flex; justify-content: space-between; width: 100%;">
-                                <h3 style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;">Disk Storage (Course Materials)</h3>
+                                <h3 style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;">Disk Storage
+                                    (Course Materials)</h3>
                                 <span id="disk-percentage" style="font-size: 0.85rem; font-weight: 600;">68%</span>
                             </div>
-                            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin: 4px 0;">
-                                <div id="disk-progress" style="width: 68%; height: 100%; background: var(--primary); border-radius: 4px;"></div>
+                            <div
+                                style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin: 4px 0;">
+                                <div id="disk-progress"
+                                    style="width: 68%; height: 100%; background: var(--primary); border-radius: 4px;">
+                                </div>
                             </div>
-                            <p id="disk-text" style="font-size: 0.85rem; color: var(--text-muted);">340GB / 500GB Used</p>
+                            <p id="disk-text" style="font-size: 0.85rem; color: var(--text-muted);">340GB / 500GB Used
+                            </p>
                         </div>
                         <div class="stat-card"
                             style="background: var(--surface); color: var(--text-dark); border: 1px solid var(--border); flex-direction: column; align-items: flex-start; gap: 8px;">
-                            <h3 style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;">System Status</h3>
+                            <h3 style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;">System Status
+                            </h3>
                             <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px;">
-                                <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 6px 12px;"><span class="status-indicator" style="display: inline-block; margin-right: 6px;"></span>Healthy</span>
+                                <span class="badge"
+                                    style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 6px 12px;"><span
+                                        class="status-indicator"
+                                        style="display: inline-block; margin-right: 6px;"></span>Healthy</span>
                             </div>
-                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Last Backup: 2h ago</p>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Last Backup: 2h
+                                ago</p>
                         </div>
                     </div>
 
@@ -146,17 +158,25 @@
                                     <canvas id="engagement-chart"></canvas>
                                 </div>
                                 <!-- Dept Donut Chart -->
-                                <div class="donut-chart-container" style="flex: 1; display: flex; flex-direction: column; align-items: center; padding-bottom: 20px;">
-                                    <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Departmental Breakdown</h4>
+                                <div class="donut-chart-container"
+                                    style="flex: 1; display: flex; flex-direction: column; align-items: center; padding-bottom: 20px;">
+                                    <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
+                                        Departmental Breakdown</h4>
                                     <div style="width: 200px; height: 200px; position: relative;">
                                         <canvas id="departmentPieChart"></canvas>
                                     </div>
-                                    <div class="donut-legend" style="margin-top: 15px; width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;">
-                                        <div class="legend-item"><span class="dot" style="background: #3056D3;"></span> Computing (40%)</div>
-                                        <div class="legend-item"><span class="dot" style="background: #10B981;"></span> Engineering (25%)</div>
-                                        <div class="legend-item"><span class="dot" style="background: #F59E0B;"></span> Medicine (18%)</div>
-                                        <div class="legend-item"><span class="dot" style="background: #8B5CF6;"></span> Social Science (10%)</div>
-                                        <div class="legend-item"><span class="dot" style="background: #EF4444;"></span> Others (7%)</div>
+                                    <div class="donut-legend"
+                                        style="margin-top: 15px; width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;">
+                                        <div class="legend-item"><span class="dot" style="background: #3056D3;"></span>
+                                            Computing (40%)</div>
+                                        <div class="legend-item"><span class="dot" style="background: #10B981;"></span>
+                                            Engineering (25%)</div>
+                                        <div class="legend-item"><span class="dot" style="background: #F59E0B;"></span>
+                                            Medicine (18%)</div>
+                                        <div class="legend-item"><span class="dot" style="background: #8B5CF6;"></span>
+                                            Social Science (10%)</div>
+                                        <div class="legend-item"><span class="dot" style="background: #EF4444;"></span>
+                                            Others (7%)</div>
                                     </div>
                                 </div>
                             </div>
@@ -207,7 +227,8 @@
                         </div>
                         <div class="feed-list">
                             <div class="feed-item">
-                                <div class="feed-icon" style="background: rgba(48, 86, 211, 0.1); color: var(--primary);"><span
+                                <div class="feed-icon"
+                                    style="background: rgba(48, 86, 211, 0.1); color: var(--primary);"><span
                                         class="material-symbols-outlined">person_add</span></div>
                                 <div class="feed-content">
                                     <p><strong>Admin</strong> added Instructor <strong>Hana</strong></p>
@@ -215,7 +236,8 @@
                                 </div>
                             </div>
                             <div class="feed-item">
-                                <div class="feed-icon" style="background: rgba(48, 86, 211, 0.1); color: var(--primary);"><span
+                                <div class="feed-icon"
+                                    style="background: rgba(48, 86, 211, 0.1); color: var(--primary);"><span
                                         class="material-symbols-outlined">backup</span></div>
                                 <div class="feed-content">
                                     <p><strong>Database backup</strong> triggered manually</p>
@@ -223,7 +245,8 @@
                                 </div>
                             </div>
                             <div class="feed-item">
-                                <div class="feed-icon" style="background: rgba(48, 86, 211, 0.1); color: var(--primary);"><span
+                                <div class="feed-icon"
+                                    style="background: rgba(48, 86, 211, 0.1); color: var(--primary);"><span
                                         class="material-symbols-outlined">edit_document</span></div>
                                 <div class="feed-content">
                                     <p>Course <strong>CS101</strong> updated syllabus</p>
@@ -231,7 +254,8 @@
                                 </div>
                             </div>
                             <div class="feed-item">
-                                <div class="feed-icon" style="background: rgba(48, 86, 211, 0.1); color: var(--primary);"><span
+                                <div class="feed-icon"
+                                    style="background: rgba(48, 86, 211, 0.1); color: var(--primary);"><span
                                         class="material-symbols-outlined">check_circle</span></div>
                                 <div class="feed-content">
                                     <p><strong>System maintenance</strong> completed successfully</p>
@@ -239,7 +263,8 @@
                                 </div>
                             </div>
                             <div class="feed-item">
-                                <div class="feed-icon" style="background: rgba(48, 86, 211, 0.1); color: var(--primary);"><span
+                                <div class="feed-icon"
+                                    style="background: rgba(48, 86, 211, 0.1); color: var(--primary);"><span
                                         class="material-symbols-outlined">group</span></div>
                                 <div class="feed-content">
                                     <p><strong>New student batch</strong> imported (240 records)</p>
@@ -264,10 +289,11 @@
                     <div id="bulk-action-bar" class="bulk-action-bar" style="display: none;">
                         <span id="bulk-action-count">0 Users Selected</span>
                         <div class="bulk-actions">
-                            <button class="btn btn-secondary btn-sm" style="color: #dc2626; border-color: #fca5a5; background: #fef2f2;">
+                            <button id="delete-selected-btn" class="btn btn-secondary btn-sm"
+                                style="color: #dc2626; border-color: #fca5a5; background: #fef2f2;">
                                 <span class="material-symbols-outlined">delete</span> Delete Selected
                             </button>
-                            <button class="btn btn-secondary btn-sm">
+                            <button id="suspend-selected-btn" class="btn btn-secondary btn-sm">
                                 <span class="material-symbols-outlined">block</span> Suspend Selected
                             </button>
                         </div>
@@ -277,10 +303,17 @@
                     <div class="filter-bar" style="display: flex; gap: 16px; margin-bottom: 20px;">
                         <input type="text" id="user-search" placeholder="Search users by name or email..."
                             style="flex: 1; padding: 10px 16px; border: 1px solid #E2E8F0; border-radius: 12px; outline: none; transition: var(--transition);">
-                        <div class="global-actions" style="display: flex; align-items: center; gap: 8px; border-right: 1px solid #E2E8F0; padding-right: 16px;">
-                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">User Actions:</span>
-                            <button id="global-edit-btn" class="icon-btn global-action-btn" title="Edit User" disabled style="opacity: 0.4; cursor: not-allowed;"><span class="material-symbols-outlined">edit</span></button>
-                            <button id="global-view-btn" class="icon-btn global-action-btn" title="View Profile" disabled style="opacity: 0.4; cursor: not-allowed;"><span class="material-symbols-outlined">person</span></button>
+                        <div class="global-actions"
+                            style="display: flex; align-items: center; gap: 8px; border-right: 1px solid #E2E8F0; padding-right: 16px;">
+                            <span
+                                style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">User
+                                Actions:</span>
+                            <button id="global-edit-btn" class="icon-btn global-action-btn" title="Edit User" disabled
+                                style="opacity: 0.4; cursor: not-allowed;"><span
+                                    class="material-symbols-outlined">edit</span></button>
+                            <button id="global-view-btn" class="icon-btn global-action-btn" title="View Profile"
+                                disabled style="opacity: 0.4; cursor: not-allowed;"><span
+                                    class="material-symbols-outlined">person</span></button>
                         </div>
                         <select id="role-filter" class="filter-dropdown">
                             <option value="all">All Roles</option>
@@ -303,6 +336,7 @@
                                     <th class="checkbox-col"></th>
                                     <th>Name</th>
                                     <th>Email</th>
+                                    <th>Inst. ID</th>
                                     <th>Role</th>
                                     <th>Department</th>
                                     <th>Status</th>
@@ -310,63 +344,7 @@
                                 </tr>
                             </thead>
                             <tbody id="users-table-body">
-                                <tr>
-                                    <td class="checkbox-col"><input type="checkbox" class="row-checkbox"></td>
-                                    <td>
-                                        <div class="user-info-cell">
-                                            <img src="https://ui-avatars.com/api/?name=John+Doe&background=dcfce7&color=166534&rounded=true" alt="Avatar" class="avatar-sm">
-                                            <span class="user-name clickable-name">John Doe</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-muted">john.d@university.edu</td>
-                                    <td><span class="badge role-student">Student</span></td>
-                                    <td class="text-muted">Computer Science</td>
-                                    <td><span class="badge status-active">Active</span></td>
-                                    <td class="actions-cell" style="justify-content: center;">
-                                        <label class="toggle-switch" title="Toggle Status">
-                                            <input type="checkbox" checked>
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="checkbox-col"><input type="checkbox" class="row-checkbox"></td>
-                                    <td>
-                                        <div class="user-info-cell">
-                                            <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=f3e8ff&color=7e22ce&rounded=true" alt="Avatar" class="avatar-sm">
-                                            <span class="user-name">Dr. Sarah Jenkins</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-muted">s.jenkins@university.edu</td>
-                                    <td><span class="badge role-instructor">Instructor</span></td>
-                                    <td class="text-muted">Mathematics</td>
-                                    <td><span class="badge status-active">Active</span></td>
-                                    <td class="actions-cell" style="justify-content: center;">
-                                        <label class="toggle-switch" title="Toggle Status">
-                                            <input type="checkbox" checked>
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="checkbox-col"><input type="checkbox" class="row-checkbox"></td>
-                                    <td>
-                                        <div class="user-info-cell">
-                                            <img src="https://ui-avatars.com/api/?name=Michael+Smith&background=ffedd5&color=c2410c&rounded=true" alt="Avatar" class="avatar-sm">
-                                            <span class="user-name">Michael Smith</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-muted">m.smith@university.edu</td>
-                                    <td><span class="badge role-student">Student</span></td>
-                                    <td class="text-muted">Engineering</td>
-                                    <td><span class="badge status-suspended">Suspended</span></td>
-                                    <td class="actions-cell" style="justify-content: center;">
-                                        <label class="toggle-switch" title="Activate User">
-                                            <input type="checkbox">
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </td>
-                                </tr>
+                                <!-- Populated dynamically by app.js from the backend -->
                             </tbody>
                         </table>
 
@@ -374,7 +352,8 @@
                         <div class="pagination-footer">
                             <span class="text-muted" style="font-size: 0.85rem;">Showing 1-10 of 1,240 users</span>
                             <div class="pagination-controls">
-                                <button class="btn btn-secondary btn-sm" disabled style="border-radius: 8px;">Previous</button>
+                                <button class="btn btn-secondary btn-sm" disabled
+                                    style="border-radius: 8px;">Previous</button>
                                 <button class="btn btn-secondary btn-sm" style="border-radius: 8px;">Next</button>
                             </div>
                         </div>
@@ -672,16 +651,22 @@
         </div>
         <div class="drawer-content">
             <div class="drawer-profile-info">
-                <img id="drawer-avatar" src="https://ui-avatars.com/api/?name=User&background=eff6ff&color=2563eb&rounded=true&size=100" alt="User Avatar">
+                <img id="drawer-avatar"
+                    src="https://ui-avatars.com/api/?name=User&background=eff6ff&color=2563eb&rounded=true&size=100"
+                    alt="User Avatar">
                 <h3 id="drawer-name">User Name</h3>
                 <p id="drawer-email" class="text-muted">user@university.edu</p>
                 <span id="drawer-role" class="badge">Role</span>
             </div>
-            
+
             <div class="drawer-details">
-                <div class="detail-group">
+                <div class="detail-group" id="drawer-dept-group" style="display: none;">
                     <label>Department</label>
                     <p id="drawer-dept">Department Name</p>
+                </div>
+                <div class="detail-group" id="drawer-inst-id-group" style="display: none;">
+                    <label>Institutional ID</label>
+                    <p id="drawer-inst-id">N/A</p>
                 </div>
                 <div class="detail-group">
                     <label>Status</label>
@@ -709,31 +694,56 @@
             </div>
             <div class="modal-body">
                 <form id="create-user-form">
-                    <div class="form-group">
-                        <label for="name">Full Name</label>
-                        <input type="text" id="name" placeholder="E.g., Jane Smith" required>
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 0 0 100px;">
+                            <label for="title">Title</label>
+                            <select id="title">
+                                <option value="">None</option>
+                                <option value="Mr.">Mr.</option>
+                                <option value="Ms.">Ms.</option>
+                                <option value="Mrs.">Mrs.</option>
+                                <option value="Dr.">Dr.</option>
+                                <option value="Prof.">Prof.</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="first-name">First Name</label>
+                            <input type="text" id="first-name" placeholder="E.g., Jane" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="middle-name">Middle Name</label>
+                            <input type="text" id="middle-name" placeholder="E.g., Ann">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="last-name">Last Name</label>
+                            <input type="text" id="last-name" placeholder="E.g., Smith" required>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="email">University Email</label>
-                        <input type="email" id="email" placeholder="jane.smith@university.edu" required>
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="email">University Email</label>
+                            <input type="email" id="email" placeholder="jane.smith@university.edu" required>
+                        </div>
+                        <div class="form-group" id="institutional-id-group" style="flex: 1; display: none;">
+                            <label for="institutional-id">Institutional ID</label>
+                            <input type="text" id="institutional-id" placeholder="E.g., BDU1501234">
+                        </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="role">Role</label>
                             <select id="role" required>
-                                <option value="">Select a role...</option>
+                                <option value="" disabled selected hidden>Select a role...</option>
                                 <option value="student">Student</option>
                                 <option value="instructor">Instructor</option>
                                 <option value="admin">Administrator</option>
                             </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="department-group" style="display: none;">
                             <label for="department">Department</label>
-                            <select id="department" required>
-                                <option value="">Select department...</option>
-                                <option value="cs">Computer Science</option>
-                                <option value="math">Mathematics</option>
-                                <option value="physics">Physics</option>
+                            <select id="department">
+                                <option value="" disabled selected hidden>Select department...</option>
+                                <!-- Populated dynamically by app.js -->
                             </select>
                         </div>
                     </div>
@@ -764,17 +774,22 @@
                     </div>
                 </div>
                 <form id="update-user-form">
-                    <div class="form-group">
-                        <label for="profile-name">Full Name</label>
-                        <input type="text" id="profile-name" value="John Doe" required>
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="profile-first-name">First Name</label>
+                            <input type="text" id="profile-first-name" value="John" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="profile-last-name">Last Name</label>
+                            <input type="text" id="profile-last-name" value="Doe" required>
+                        </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="profile-department">Department</label>
                             <select id="profile-department" required>
-                                <option value="cs" selected>Computer Science</option>
-                                <option value="math">Mathematics</option>
-                                <option value="physics">Physics</option>
+                                <option value="">Select department...</option>
+                                <!-- Populated dynamically by app.js -->
                             </select>
                         </div>
                         <div class="form-group">
