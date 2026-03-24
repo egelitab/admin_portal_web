@@ -289,6 +289,24 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+}
+
+.stat-card:hover {
+    background: #2563eb !important;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+    border-color: #2563eb !important;
+}
+
+.stat-card:hover * {
+    color: #ffffff !important;
+}
+
+.stat-card:hover .stat-icon,
+.stat-card:hover .badge {
+    background: rgba(255, 255, 255, 0.2) !important;
 }
 
 .stat-icon {
@@ -405,6 +423,10 @@ body {
     box-shadow: 0 4px 15px rgba(48, 86, 211, 0.3);
 }
 
+.btn-primary:active {
+    background: #1e3a8a;
+}
+
 .btn-secondary {
     background: #f8fafc;
     color: var(--text-dark);
@@ -432,9 +454,21 @@ body {
     border-collapse: collapse;
 }
 
+#users-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.dept-cell {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+}
+
 .data-table th,
 .data-table td {
-    padding: 12px 20px;
+    padding: 12px 16px;
     text-align: left;
     border-bottom: 1px solid var(--border);
     vertical-align: middle;
@@ -500,11 +534,11 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 20px;
-    background: #EFF6FF;
+    padding: 8px 16px;
+    background: #f0f7ff;
     border: 1px solid var(--primary);
     border-radius: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     animation: fadeIn 0.3s ease;
 }
 
@@ -528,7 +562,7 @@ body {
 
 /* Row Highlight & Checkbox */
 .row-selected td {
-    background-color: #F0F7FF !important;
+    background-color: #f0f7ff !important;
 }
 
 .row-selected td:first-child {
@@ -540,6 +574,8 @@ body {
     width: 16px;
     height: 16px;
     cursor: pointer;
+    vertical-align: middle;
+    margin: 0;
 }
 
 /* Pagination Footer */
@@ -560,6 +596,13 @@ body {
 
 .data-table tbody tr {
     transition: var(--transition);
+    cursor: pointer;
+    display: table-row;
+    vertical-align: middle;
+}
+
+.data-table tbody tr:nth-child(even) {
+    background-color: #f9fafb;
 }
 
 .data-table tbody tr:hover {
@@ -572,7 +615,7 @@ body {
 
 /* Badges */
 .badge {
-    padding: 6px 12px;
+    padding: 4px 12px;
     border-radius: 50px;
     font-size: 0.75rem;
     font-weight: 600;
@@ -584,9 +627,9 @@ body {
 
 .role-student { background: #eff6ff; color: #2563eb; }
 .role-instructor { background: #fffbeb; color: #d97706; }
+.role-admin { background: #f3e8ff; color: #7e22ce; }
 
-.status-active, .status-suspended {
-    padding: 4px 10px;
+.status-active, .status-suspended, .status-pending {
     font-size: 0.7rem;
 }
 
@@ -610,9 +653,19 @@ body {
     background: #ef4444;
 }
 
+.status-pending { background: rgba(245, 158, 11, 0.1); color: #d97706; }
+.status-pending::before {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #f59e0b;
+}
+
 /* Filter Dropdown */
 .filter-dropdown {
-    padding: 10px 36px 10px 16px;
+    padding: 8px 36px 8px 16px;
     border: 1px solid var(--border);
     border-radius: 12px;
     background: white;
@@ -635,9 +688,10 @@ body {
 /* Action List */
 .action-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: 12px;
-    align-self: start;
+    align-items: start;
+    align-content: start;
 }
 
 .action-btn {
@@ -651,31 +705,36 @@ body {
     border: 1px solid var(--border);
     border-radius: 16px;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.3s ease-in-out;
     text-align: center;
-    height: 110px;
+    min-height: 120px;
 }
 
 .action-text h4, 
 .add-shortcut-text {
-    font-size: 11px;
+    font-size: 10px;
     margin: 0;
     font-weight: 600;
 }
 
 .action-btn:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+}
+
+.action-btn:hover * {
+    color: #ffffff !important;
+}
+
+.action-btn:hover .icon-box {
+    background: rgba(255, 255, 255, 0.2) !important;
 }
 
 .add-shortcut-btn {
     border: 2px dashed #e2e8f0;
     color: var(--primary);
-}
-
-.add-shortcut-btn:hover {
-    background: rgba(48, 86, 211, 0.05);
-    border-color: #cbd5e1;
 }
 
 .icon-box {

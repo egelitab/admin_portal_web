@@ -74,7 +74,16 @@
         <!-- Main Content -->
         <main class="content">
             <header class="top-header">
-                <h1 id="section-title">Dashboard</h1>
+                <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex: 1; margin-right: 32px;">
+                    <div>
+                        <span id="breadcrumb" class="text-muted" style="font-size: 0.8rem; font-weight: 500; margin-bottom: 4px; display: block;">Dashboard / User Management</span>
+                        <h1 id="section-title">Dashboard</h1>
+                    </div>
+                    <button id="open-create-user-modal" class="btn btn-primary" style="display: none; height: 40px; padding: 0 20px; font-size: 0.9rem; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; transition: all 0.3s ease;">
+                        <span class="material-symbols-outlined" style="font-size: 1.1rem;">person_add</span>
+                        Create User
+                    </button>
+                </div>
                 <div class="admin-profile">
                     <div class="status-indicator online" title="System Healthy"></div>
                     <span class="admin-name">Admin User</span>
@@ -252,15 +261,34 @@
 
                 <!-- Users Section -->
                 <section id="users" class="view-section">
-                    <div class="section-header">
-                        <h2>User Directory</h2>
-                        <button id="open-create-user-modal" class="btn btn-primary">
-                            <span class="material-symbols-outlined">person_add</span>
-                            Create User
-                        </button>
+                    <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--text-dark); margin-bottom: 12px;">User Directory</h2>
+
+                    <!-- Search & Filter Bar -->
+                    <div class="filter-bar" style="display: flex; gap: 16px; margin-bottom: 16px; align-items: center;">
+                        <input type="text" id="user-search" placeholder="Search users by name or email..."
+                            style="flex: 1; min-width: 250px; height: 40px; padding: 0 16px; border: 1px solid #E2E8F0; border-radius: 12px; outline: none; transition: var(--transition); box-sizing: border-box;">
+                        <div class="global-actions" style="display: flex; align-items: center; gap: 8px; border-right: 1px solid #E2E8F0; padding-right: 16px;">
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">User Actions:</span>
+                            <button id="global-edit-btn" class="icon-btn global-action-btn" title="Edit User" disabled style="opacity: 0.4; cursor: not-allowed;"><span class="material-symbols-outlined">edit</span></button>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px; margin-left: auto; align-items: center;">
+                            <select id="role-filter" class="filter-dropdown">
+                                <option value="all">All Roles</option>
+                                <option value="student">Student</option>
+                                <option value="instructor">Instructor</option>
+                                <option value="admin">Administrator</option>
+                            </select>
+                            <button class="btn btn-secondary" style="border-radius: 12px; padding: 8px 16px;">
+                                <span class="material-symbols-outlined">filter_list</span> Filter
+                            </button>
+                            <button class="btn btn-secondary" style="border-radius: 12px; padding: 8px 16px;">
+                                <span class="material-symbols-outlined">download</span> Export
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Bulk Action Bar (Hidden by default) -->
+                    <!-- Bulk Action Bar -->
                     <div id="bulk-action-bar" class="bulk-action-bar" style="display: none;">
                         <span id="bulk-action-count">0 Users Selected</span>
                         <div class="bulk-actions">
@@ -273,109 +301,30 @@
                         </div>
                     </div>
 
-                    <!-- Search & Filter Bar -->
-                    <div class="filter-bar" style="display: flex; gap: 16px; margin-bottom: 20px;">
-                        <input type="text" id="user-search" placeholder="Search users by name or email..."
-                            style="flex: 1; padding: 10px 16px; border: 1px solid #E2E8F0; border-radius: 12px; outline: none; transition: var(--transition);">
-                        <div class="global-actions" style="display: flex; align-items: center; gap: 8px; border-right: 1px solid #E2E8F0; padding-right: 16px;">
-                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">User Actions:</span>
-                            <button id="global-edit-btn" class="icon-btn global-action-btn" title="Edit User" disabled style="opacity: 0.4; cursor: not-allowed;"><span class="material-symbols-outlined">edit</span></button>
-                            <button id="global-view-btn" class="icon-btn global-action-btn" title="View Profile" disabled style="opacity: 0.4; cursor: not-allowed;"><span class="material-symbols-outlined">person</span></button>
-                        </div>
-                        <select id="role-filter" class="filter-dropdown">
-                            <option value="all">All Roles</option>
-                            <option value="student">Student</option>
-                            <option value="instructor">Instructor</option>
-                            <option value="admin">Administrator</option>
-                        </select>
-                        <button class="btn btn-secondary" style="border-radius: 12px; padding: 10px 16px;">
-                            <span class="material-symbols-outlined">filter_list</span> Filter
-                        </button>
-                        <button class="btn btn-secondary" style="border-radius: 12px; padding: 10px 16px;">
-                            <span class="material-symbols-outlined">download</span> Export
-                        </button>
-                    </div>
-
                     <div class="card table-card">
-                        <table class="data-table">
+                        <table id="users-table" class="data-table">
                             <thead>
                                 <tr>
-                                    <th class="checkbox-col"></th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Department</th>
-                                    <th>Status</th>
-                                    <th style="text-align: center;">Actions</th>
+                                    <th class="checkbox-col" style="width: 40px;"></th>
+                                    <th style="width: 15%; white-space: nowrap;">Name <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle; color: #94a3b8; cursor: pointer;">sort</span></th>
+                                    <th style="width: 30%;">Email</th>
+                                    <th style="width: 10%;">Role</th>
+                                    <th style="width: 20%;">Department</th>
+                                    <th style="width: 12%; white-space: nowrap;">Status <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle; color: #94a3b8; cursor: pointer;">sort</span></th>
+                                    <th style="width: 13%; text-align: center; white-space: nowrap;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="users-table-body">
-                                <tr>
-                                    <td class="checkbox-col"><input type="checkbox" class="row-checkbox"></td>
-                                    <td>
-                                        <div class="user-info-cell">
-                                            <img src="https://ui-avatars.com/api/?name=John+Doe&background=dcfce7&color=166534&rounded=true" alt="Avatar" class="avatar-sm">
-                                            <span class="user-name clickable-name">John Doe</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-muted">john.d@university.edu</td>
-                                    <td><span class="badge role-student">Student</span></td>
-                                    <td class="text-muted">Computer Science</td>
-                                    <td><span class="badge status-active">Active</span></td>
-                                    <td class="actions-cell" style="justify-content: center;">
-                                        <label class="toggle-switch" title="Toggle Status">
-                                            <input type="checkbox" checked>
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="checkbox-col"><input type="checkbox" class="row-checkbox"></td>
-                                    <td>
-                                        <div class="user-info-cell">
-                                            <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=f3e8ff&color=7e22ce&rounded=true" alt="Avatar" class="avatar-sm">
-                                            <span class="user-name">Dr. Sarah Jenkins</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-muted">s.jenkins@university.edu</td>
-                                    <td><span class="badge role-instructor">Instructor</span></td>
-                                    <td class="text-muted">Mathematics</td>
-                                    <td><span class="badge status-active">Active</span></td>
-                                    <td class="actions-cell" style="justify-content: center;">
-                                        <label class="toggle-switch" title="Toggle Status">
-                                            <input type="checkbox" checked>
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="checkbox-col"><input type="checkbox" class="row-checkbox"></td>
-                                    <td>
-                                        <div class="user-info-cell">
-                                            <img src="https://ui-avatars.com/api/?name=Michael+Smith&background=ffedd5&color=c2410c&rounded=true" alt="Avatar" class="avatar-sm">
-                                            <span class="user-name">Michael Smith</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-muted">m.smith@university.edu</td>
-                                    <td><span class="badge role-student">Student</span></td>
-                                    <td class="text-muted">Engineering</td>
-                                    <td><span class="badge status-suspended">Suspended</span></td>
-                                    <td class="actions-cell" style="justify-content: center;">
-                                        <label class="toggle-switch" title="Activate User">
-                                            <input type="checkbox">
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </td>
-                                </tr>
+                                <!-- Rows injected via Javascript -->
                             </tbody>
                         </table>
 
                         <!-- Pagination Footer -->
                         <div class="pagination-footer">
-                            <span class="text-muted" style="font-size: 0.85rem;">Showing 1-10 of 1,240 users</span>
+                            <span id="pagination-text" class="text-muted" style="font-size: 0.85rem;">Showing 1-10 of 22 users</span>
                             <div class="pagination-controls">
-                                <button class="btn btn-secondary btn-sm" disabled style="border-radius: 8px;">Previous</button>
-                                <button class="btn btn-secondary btn-sm" style="border-radius: 8px;">Next</button>
+                                <button id="prev-btn" class="btn btn-secondary btn-sm" disabled style="border-radius: 8px;">Previous</button>
+                                <button id="next-btn" class="btn btn-secondary btn-sm" style="border-radius: 8px;">Next</button>
                             </div>
                         </div>
                     </div>
