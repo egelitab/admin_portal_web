@@ -862,6 +862,117 @@ body {
     gap: 12px;
 }
 
+/* Departments Grid */
+.departments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.department-card {
+    background: var(--surface);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    border: 1px solid var(--border);
+    cursor: pointer;
+}
+
+.department-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary);
+}
+
+.dept-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4px;
+}
+
+.dept-title-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dept-icon-small {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dept-icon-small .material-symbols-outlined {
+    font-size: 24px;
+}
+
+.dept-name {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.edit-dept {
+    color: var(--text-muted);
+    padding: 4px;
+}
+
+.edit-dept:hover {
+    color: var(--primary);
+    background: rgba(48, 86, 211, 0.05);
+}
+
+.dept-card-middle {
+    margin-bottom: 20px;
+    padding-left: 60px; /* Align text with the start of the title, skipping the 48px icon + 12px gap */
+}
+
+.dept-stats-boxes {
+    display: flex;
+    gap: 16px;
+}
+
+.stat-box {
+    flex: 1;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.department-card:hover .stat-box {
+    background: white;
+    border-color: #cbd5e1;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+
+.stat-num {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
 /* Forms & Modals */
 .modal {
     display: none;

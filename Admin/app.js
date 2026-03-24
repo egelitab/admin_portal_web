@@ -196,7 +196,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const roleTerm = roleFilter.value.toLowerCase();
 
         filteredUsers = usersData.filter(user => {
-            const matchesSearch = user.name.toLowerCase().includes(searchTerm) || user.email.toLowerCase().includes(searchTerm);
+            const matchesSearch = user.name.toLowerCase().includes(searchTerm) || 
+                                  user.email.toLowerCase().includes(searchTerm) ||
+                                  user.dept.toLowerCase().includes(searchTerm);
             const matchesRole = roleTerm === 'all' || user.role.toLowerCase() === roleTerm;
             return matchesSearch && matchesRole;
         });
@@ -205,6 +207,20 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPage = 1;
         renderUserTable();
     }
+
+    window.navigateToUsersTabAndFilter = function(departmentName) {
+        // Activate 'users' tab
+        const usersTab = document.querySelector('.nav-item[data-target="users"]');
+        if (usersTab) usersTab.click();
+        
+        // Set the filter
+        const searchInput = document.getElementById('user-search');
+        if (searchInput) {
+            searchInput.value = departmentName;
+            // Trigger filter event
+            searchInput.dispatchEvent(new Event('input'));
+        }
+    };
 
     if (searchInput) searchInput.addEventListener('input', filterUsers);
     if (roleFilter) roleFilter.addEventListener('change', filterUsers);
