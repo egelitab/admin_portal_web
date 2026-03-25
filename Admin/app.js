@@ -167,31 +167,115 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchUsers();
 
     // Fetch and populate departments
+    let departmentsData = [];
     async function fetchDepartments() {
         try {
             const res = await fetch('http://localhost:5000/api/departments');
             const data = await res.json();
             if (data.success) {
-                const deptSelects = [
-                    document.getElementById('department'),
-                    document.getElementById('profile-department')
-                ];
-                deptSelects.forEach(selectEl => {
-                    if (selectEl) {
-                        selectEl.innerHTML = '<option value="" disabled selected hidden>Select department...</option>';
-                        data.data.forEach(dept => {
-                            const option = document.createElement('option');
-                            option.value = dept.id;
-                            option.textContent = dept.name;
-                            selectEl.appendChild(option);
-                        });
-                    }
-                });
+                departmentsData = data.data;
+                const profileDeptSelect = document.getElementById('profile-department');
+                if (profileDeptSelect) {
+                    profileDeptSelect.innerHTML = '<option value="" disabled selected hidden>Select department...</option>';
+                    data.data.forEach(dept => {
+                        const option = document.createElement('option');
+                        option.value = dept.id;
+                        option.textContent = dept.name;
+                        profileDeptSelect.appendChild(option);
+                    });
+                }
+
+                if (typeof renderDepartmentDropdown === 'function') {
+                    renderDepartmentDropdown(departmentsData);
+                }
             }
         } catch (err) {
             console.error("Failed to fetch departments", err);
         }
     }
+
+    const deptSearchInput = document.getElementById('department-search');
+    const deptDropdownList = document.getElementById('department-dropdown-list');
+    const deptHiddenInput = document.getElementById('department');
+
+    function renderDepartmentDropdown(departments) {
+        if (!deptDropdownList) return;
+        deptDropdownList.innerHTML = '';
+        if (departments.length === 0) {
+            const li = document.createElement('li');
+            li.textContent = 'No matching departments';
+            li.style.padding = '10px 16px';
+            li.style.color = '#64748b';
+            deptDropdownList.appendChild(li);
+            return;
+        }
+
+        departments.forEach(dept => {
+            const li = document.createElement('li');
+            li.textContent = dept.name;
+            li.dataset.value = dept.id;
+            li.style.padding = '10px 16px';
+            li.style.cursor = 'pointer';
+            li.style.borderBottom = '1px solid #f1f5f9';
+            li.style.transition = 'background 0.2s';
+
+            li.addEventListener('mouseenter', () => li.style.background = '#f8fafc');
+            li.addEventListener('mouseleave', () => li.style.background = 'transparent');
+
+            li.addEventListener('click', () => {
+                deptSearchInput.value = dept.name;
+                deptHiddenInput.value = dept.id;
+                deptDropdownList.style.display = 'none';
+            });
+            deptDropdownList.appendChild(li);
+        });
+    }
+
+    if (deptSearchInput && deptDropdownList) {
+        // Toggle dropdown on click
+        const wrapper = document.getElementById('department-group');
+        const arrow = wrapper ? wrapper.querySelector('.dropdown-arrow') : null;
+
+        const toggleDropdown = () => {
+            if (deptDropdownList.style.display === 'block') {
+                deptDropdownList.style.display = 'none';
+            } else {
+                renderDepartmentDropdown(departmentsData);
+                deptDropdownList.style.display = 'block';
+            }
+        };
+
+        deptSearchInput.addEventListener('click', toggleDropdown);
+        if (arrow) {
+            arrow.style.pointerEvents = 'auto'; // allow arrow to be clickable
+            arrow.addEventListener('click', toggleDropdown);
+        }
+
+        deptSearchInput.addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            const filtered = departmentsData.filter(d => d.name.toLowerCase().includes(val));
+            renderDepartmentDropdown(filtered);
+            deptDropdownList.style.display = 'block';
+            deptHiddenInput.value = '';
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#department-group')) {
+                deptDropdownList.style.display = 'none';
+
+                if (!deptHiddenInput.value && deptSearchInput.value) {
+                    const match = departmentsData.find(d => d.name.toLowerCase() === deptSearchInput.value.toLowerCase());
+                    if (match) {
+                        deptSearchInput.value = match.name;
+                        deptHiddenInput.value = match.id;
+                    } else {
+                        deptSearchInput.value = '';
+                    }
+                }
+            }
+        });
+    }
+
     fetchDepartments();
 
     // 4. Modal Logic
@@ -229,7 +313,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target.value === 'student') {
                 if (deptGroup) deptGroup.style.display = 'block';
                 if (instIdGroup) instIdGroup.style.display = 'block';
-                if (deptInput) deptInput.required = true;
+                if (deptInput) deptInput.required = false;
+                if (deptSearchInput) deptSearchInput.required = true;
                 if (instIdInput) instIdInput.required = true;
             } else {
                 if (deptGroup) deptGroup.style.display = 'none';
@@ -237,6 +322,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (deptInput) {
                     deptInput.required = false;
                     deptInput.value = '';
+                }
+                if (deptSearchInput) {
+                    deptSearchInput.required = false;
+                    deptSearchInput.value = '';
                 }
                 if (instIdInput) {
                     instIdInput.required = false;
@@ -263,7 +352,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const departmentId = deptEl ? (deptEl.value || null) : null;
 
             const instIdEl = document.getElementById('institutional-id');
-            const instId = instIdEl ? (instIdEl.value.trim() || null) : null;
+            const instIdPrefixEl = document.getElementById('institutional-id-prefix');
+            let instId = null;
+            if (instIdEl && instIdEl.value.trim()) {
+                instId = instIdPrefixEl ? `${instIdPrefixEl.value}${instIdEl.value.trim()}` : instIdEl.value.trim();
+            }
 
             const fullName = `${title ? title + ' ' : ''}${firstName} ${lastName}`.trim();
 
@@ -289,6 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert(`User ${fullName} created successfully!`);
                     modal.classList.remove('show');
                     userForm.reset();
+                    if (deptEl) deptEl.value = '';
                     fetchUsers();
                 } else {
                     alert(`Error creating user: ${data.message}`);

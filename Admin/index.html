@@ -708,25 +708,34 @@
                         </div>
                         <div class="form-group" style="flex: 1;">
                             <label for="first-name">First Name</label>
-                            <input type="text" id="first-name" placeholder="E.g., Jane" required>
+                            <input type="text" id="first-name" placeholder="" required>
                         </div>
                         <div class="form-group" style="flex: 1;">
                             <label for="middle-name">Middle Name</label>
-                            <input type="text" id="middle-name" placeholder="E.g., Ann">
+                            <input type="text" id="middle-name" placeholder="">
                         </div>
                         <div class="form-group" style="flex: 1;">
                             <label for="last-name">Last Name</label>
-                            <input type="text" id="last-name" placeholder="E.g., Smith" required>
+                            <input type="text" id="last-name" placeholder="" required>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group" style="flex: 1;">
                             <label for="email">University Email</label>
-                            <input type="email" id="email" placeholder="jane.smith@university.edu" required>
+                            <input type="email" id="email" placeholder="E.g., bdu1501234@bdu.edu.et" required>
                         </div>
                         <div class="form-group" id="institutional-id-group" style="flex: 1; display: none;">
                             <label for="institutional-id">Institutional ID</label>
-                            <input type="text" id="institutional-id" placeholder="E.g., BDU1501234">
+                            <div
+                                style="display: flex; border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden;">
+                                <select id="institutional-id-prefix"
+                                    style="flex: 0 0 90px; border: none; border-right: 1px solid #E2E8F0; border-radius: 0; background-color: #f8fafc; outline: none !important; box-shadow: none !important; padding: 10px 12px;">
+                                    <option value="BDU">BDU</option>
+                                    <option value="">None</option>
+                                </select>
+                                <input type="text" id="institutional-id" placeholder="E.g., 1501234"
+                                    style="flex: 1; border: none; border-radius: 0; outline: none !important; box-shadow: none !important;">
+                            </div>
                         </div>
                     </div>
                     <div class="form-row">
@@ -740,11 +749,17 @@
                             </select>
                         </div>
                         <div class="form-group" id="department-group" style="display: none;">
-                            <label for="department">Department</label>
-                            <select id="department">
-                                <option value="" disabled selected hidden>Select department...</option>
-                                <!-- Populated dynamically by app.js -->
-                            </select>
+                            <label for="department-search">Department</label>
+                            <div class="custom-select-wrapper" style="position: relative;">
+                                <input type="text" id="department-search" placeholder="Select department..."
+                                    autocomplete="off" style="padding-right: 32px;">
+                                <span class="material-symbols-outlined dropdown-arrow"
+                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b; pointer-events: none;">arrow_drop_down</span>
+                                <ul id="department-dropdown-list"
+                                    style="display: none; position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 200px; overflow-y: auto; background: #ffffff; border: 1px solid #E2E8F0; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 50; margin: 0; padding: 0; list-style: none;">
+                                </ul>
+                                <input type="hidden" id="department">
+                            </div>
                         </div>
                     </div>
                     <div class="form-actions">
