@@ -335,6 +335,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const passwordInput = document.getElementById('password');
+    const updatePasswordPlaceholder = () => {
+        if (!passwordInput) return;
+        const currentRole = roleSelect ? roleSelect.value : '';
+        if (currentRole === 'student') {
+            let idVal = instIdInput ? instIdInput.value.trim() : '';
+            let prefix = '';
+            const instIdPrefixEl = document.getElementById('institutional-id-prefix');
+            if (instIdPrefixEl && idVal) {
+                prefix = instIdPrefixEl.value;
+            }
+            if (idVal) {
+                passwordInput.placeholder = `Default: ${prefix}${idVal}#`;
+            } else {
+                passwordInput.placeholder = "Default: [Inst. ID]#";
+            }
+        } else {
+            passwordInput.placeholder = "Default: 123456";
+        }
+    };
+
+    if (roleSelect) roleSelect.addEventListener('change', updatePasswordPlaceholder);
+    if (instIdInput) instIdInput.addEventListener('input', updatePasswordPlaceholder);
+    const instIdPrefixEl = document.getElementById('institutional-id-prefix');
+    if (instIdPrefixEl) instIdPrefixEl.addEventListener('change', updatePasswordPlaceholder);
+
+    // Initial call
+    updatePasswordPlaceholder();
+
     // 5. Form Submissions
     const userForm = document.getElementById('create-user-form');
     if (userForm) {
@@ -346,6 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const middleName = middleNameInput ? middleNameInput.value.trim() : '';
             const lastName = document.getElementById('last-name').value.trim();
             const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
             const role = document.getElementById('role').value;
 
             const deptEl = document.getElementById('department');
@@ -367,6 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     middle_name: middleName,
                     last_name: lastName,
                     email: email,
+                    password: password,
                     role: role,
                     department_id: departmentId,
                     institutional_id: instId
