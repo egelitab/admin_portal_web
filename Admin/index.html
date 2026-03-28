@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+.<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -74,7 +74,16 @@
         <!-- Main Content -->
         <main class="content">
             <header class="top-header">
-                <h1 id="section-title">Dashboard</h1>
+                <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex: 1; margin-right: 32px;">
+                    <div>
+                        <span id="breadcrumb" class="text-muted" style="font-size: 0.8rem; font-weight: 500; margin-bottom: 4px; display: block;">Dashboard / User Management</span>
+                        <h1 id="section-title">Dashboard</h1>
+                    </div>
+                    <button id="open-create-user-modal" class="btn btn-primary" style="display: none; height: 40px; padding: 0 20px; font-size: 0.9rem; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; transition: all 0.3s ease;">
+                        <span class="material-symbols-outlined" style="font-size: 1.1rem;">person_add</span>
+                        Create User
+                    </button>
+                </div>
                 <div class="admin-profile">
                     <div class="status-indicator online" title="System Healthy"></div>
                     <span class="admin-name">Admin User</span>
@@ -252,15 +261,34 @@
 
                 <!-- Users Section -->
                 <section id="users" class="view-section">
-                    <div class="section-header">
-                        <h2>User Directory</h2>
-                        <button id="open-create-user-modal" class="btn btn-primary">
-                            <span class="material-symbols-outlined">person_add</span>
-                            Create User
-                        </button>
+                    <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--text-dark); margin-bottom: 12px;">User Directory</h2>
+
+                    <!-- Search & Filter Bar -->
+                    <div class="filter-bar" style="display: flex; gap: 16px; margin-bottom: 16px; align-items: center;">
+                        <input type="text" id="user-search" placeholder="Search users by name or email..."
+                            style="flex: 1; min-width: 250px; height: 40px; padding: 0 16px; border: 1px solid #E2E8F0; border-radius: 12px; outline: none; transition: var(--transition); box-sizing: border-box;">
+                        <div class="global-actions" style="display: flex; align-items: center; gap: 8px; border-right: 1px solid #E2E8F0; padding-right: 16px;">
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">User Actions:</span>
+                            <button id="global-edit-btn" class="icon-btn global-action-btn" title="Edit User" disabled style="opacity: 0.4; cursor: not-allowed;"><span class="material-symbols-outlined">edit</span></button>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px; margin-left: auto; align-items: center;">
+                            <select id="role-filter" class="filter-dropdown">
+                                <option value="all">All Roles</option>
+                                <option value="student">Student</option>
+                                <option value="instructor">Instructor</option>
+                                <option value="admin">Administrator</option>
+                            </select>
+                            <button class="btn btn-secondary" style="border-radius: 12px; padding: 8px 16px;">
+                                <span class="material-symbols-outlined">filter_list</span> Filter
+                            </button>
+                            <button class="btn btn-secondary" style="border-radius: 12px; padding: 8px 16px;">
+                                <span class="material-symbols-outlined">download</span> Export
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Bulk Action Bar (Hidden by default) -->
+                    <!-- Bulk Action Bar -->
                     <div id="bulk-action-bar" class="bulk-action-bar" style="display: none;">
                         <span id="bulk-action-count">0 Users Selected</span>
                         <div class="bulk-actions">
@@ -273,109 +301,30 @@
                         </div>
                     </div>
 
-                    <!-- Search & Filter Bar -->
-                    <div class="filter-bar" style="display: flex; gap: 16px; margin-bottom: 20px;">
-                        <input type="text" id="user-search" placeholder="Search users by name or email..."
-                            style="flex: 1; padding: 10px 16px; border: 1px solid #E2E8F0; border-radius: 12px; outline: none; transition: var(--transition);">
-                        <div class="global-actions" style="display: flex; align-items: center; gap: 8px; border-right: 1px solid #E2E8F0; padding-right: 16px;">
-                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">User Actions:</span>
-                            <button id="global-edit-btn" class="icon-btn global-action-btn" title="Edit User" disabled style="opacity: 0.4; cursor: not-allowed;"><span class="material-symbols-outlined">edit</span></button>
-                            <button id="global-view-btn" class="icon-btn global-action-btn" title="View Profile" disabled style="opacity: 0.4; cursor: not-allowed;"><span class="material-symbols-outlined">person</span></button>
-                        </div>
-                        <select id="role-filter" class="filter-dropdown">
-                            <option value="all">All Roles</option>
-                            <option value="student">Student</option>
-                            <option value="instructor">Instructor</option>
-                            <option value="admin">Administrator</option>
-                        </select>
-                        <button class="btn btn-secondary" style="border-radius: 12px; padding: 10px 16px;">
-                            <span class="material-symbols-outlined">filter_list</span> Filter
-                        </button>
-                        <button class="btn btn-secondary" style="border-radius: 12px; padding: 10px 16px;">
-                            <span class="material-symbols-outlined">download</span> Export
-                        </button>
-                    </div>
-
                     <div class="card table-card">
-                        <table class="data-table">
+                        <table id="users-table" class="data-table">
                             <thead>
                                 <tr>
-                                    <th class="checkbox-col"></th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Department</th>
-                                    <th>Status</th>
-                                    <th style="text-align: center;">Actions</th>
+                                    <th class="checkbox-col" style="width: 40px;"></th>
+                                    <th style="width: 15%; white-space: nowrap;">Name <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle; color: #94a3b8; cursor: pointer;">sort</span></th>
+                                    <th style="width: 30%;">Email</th>
+                                    <th style="width: 10%;">Role</th>
+                                    <th style="width: 20%;">Department</th>
+                                    <th style="width: 12%; white-space: nowrap;">Status <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle; color: #94a3b8; cursor: pointer;">sort</span></th>
+                                    <th style="width: 13%; text-align: center; white-space: nowrap;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="users-table-body">
-                                <tr>
-                                    <td class="checkbox-col"><input type="checkbox" class="row-checkbox"></td>
-                                    <td>
-                                        <div class="user-info-cell">
-                                            <img src="https://ui-avatars.com/api/?name=John+Doe&background=dcfce7&color=166534&rounded=true" alt="Avatar" class="avatar-sm">
-                                            <span class="user-name clickable-name">John Doe</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-muted">john.d@university.edu</td>
-                                    <td><span class="badge role-student">Student</span></td>
-                                    <td class="text-muted">Computer Science</td>
-                                    <td><span class="badge status-active">Active</span></td>
-                                    <td class="actions-cell" style="justify-content: center;">
-                                        <label class="toggle-switch" title="Toggle Status">
-                                            <input type="checkbox" checked>
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="checkbox-col"><input type="checkbox" class="row-checkbox"></td>
-                                    <td>
-                                        <div class="user-info-cell">
-                                            <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=f3e8ff&color=7e22ce&rounded=true" alt="Avatar" class="avatar-sm">
-                                            <span class="user-name">Dr. Sarah Jenkins</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-muted">s.jenkins@university.edu</td>
-                                    <td><span class="badge role-instructor">Instructor</span></td>
-                                    <td class="text-muted">Mathematics</td>
-                                    <td><span class="badge status-active">Active</span></td>
-                                    <td class="actions-cell" style="justify-content: center;">
-                                        <label class="toggle-switch" title="Toggle Status">
-                                            <input type="checkbox" checked>
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="checkbox-col"><input type="checkbox" class="row-checkbox"></td>
-                                    <td>
-                                        <div class="user-info-cell">
-                                            <img src="https://ui-avatars.com/api/?name=Michael+Smith&background=ffedd5&color=c2410c&rounded=true" alt="Avatar" class="avatar-sm">
-                                            <span class="user-name">Michael Smith</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-muted">m.smith@university.edu</td>
-                                    <td><span class="badge role-student">Student</span></td>
-                                    <td class="text-muted">Engineering</td>
-                                    <td><span class="badge status-suspended">Suspended</span></td>
-                                    <td class="actions-cell" style="justify-content: center;">
-                                        <label class="toggle-switch" title="Activate User">
-                                            <input type="checkbox">
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </td>
-                                </tr>
+                                <!-- Rows injected via Javascript -->
                             </tbody>
                         </table>
 
                         <!-- Pagination Footer -->
                         <div class="pagination-footer">
-                            <span class="text-muted" style="font-size: 0.85rem;">Showing 1-10 of 1,240 users</span>
+                            <span id="pagination-text" class="text-muted" style="font-size: 0.85rem;">Showing 1-10 of 22 users</span>
                             <div class="pagination-controls">
-                                <button class="btn btn-secondary btn-sm" disabled style="border-radius: 8px;">Previous</button>
-                                <button class="btn btn-secondary btn-sm" style="border-radius: 8px;">Next</button>
+                                <button id="prev-btn" class="btn btn-secondary btn-sm" disabled style="border-radius: 8px;">Previous</button>
+                                <button id="next-btn" class="btn btn-secondary btn-sm" style="border-radius: 8px;">Next</button>
                             </div>
                         </div>
                     </div>
@@ -385,59 +334,193 @@
                 <section id="departments" class="view-section">
                     <div class="section-header">
                         <h2>University Departments</h2>
-                        <button class="btn btn-primary">
+                        <button class="btn btn-primary" onclick="document.getElementById('add-department-modal').style.display='flex'">
                             <span class="material-symbols-outlined">add</span>
                             Add Department
                         </button>
                     </div>
-                    <div class="card table-card">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Department Name</th>
-                                    <th>Faculty/School</th>
-                                    <th>Head of Department</th>
-                                    <th>Staff Count</th>
-                                    <th>Student Count</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Computer Science</strong></td>
-                                    <td>School of Computing</td>
-                                    <td>Dr. Alan Turing</td>
-                                    <td>42</td>
-                                    <td>850</td>
-                                    <td>
-                                        <button class="icon-btn edit"><span
-                                                class="material-symbols-outlined">edit</span></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Mathematics</strong></td>
-                                    <td>School of Natural Sciences</td>
-                                    <td>Dr. Katherine Johnson</td>
-                                    <td>28</td>
-                                    <td>420</td>
-                                    <td>
-                                        <button class="icon-btn edit"><span
-                                                class="material-symbols-outlined">edit</span></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Engineering</strong></td>
-                                    <td>School of Engineering</td>
-                                    <td>Dr. Nikola Tesla</td>
-                                    <td>65</td>
-                                    <td>1200</td>
-                                    <td>
-                                        <button class="icon-btn edit"><span
-                                                class="material-symbols-outlined">edit</span></button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    
+                    <div class="departments-grid">
+                        <div class="department-card" onclick="navigateToUsersTabAndFilter('Computer Science')">
+                            <div class="dept-card-top">
+                                <div class="dept-title-area">
+                                    <div class="dept-icon-small" style="background: rgba(48, 86, 211, 0.1); color: var(--primary);">
+                                        <span class="material-symbols-outlined">computer</span>
+                                    </div>
+                                    <h3 class="dept-name">Computer Science</h3>
+                                </div>
+                                <button class="icon-btn edit-dept" title="Edit Department" onclick="event.stopPropagation()"><span class="material-symbols-outlined">edit</span></button>
+                            </div>
+                            <div class="dept-card-middle">
+                                <p class="text-muted" style="font-size: 0.85rem;">Head of Dept: Dr. Alan Turing</p>
+                            </div>
+                            <div class="dept-stats-boxes">
+                                <div class="stat-box">
+                                    <span class="stat-label">Staff</span>
+                                    <span class="stat-num">42</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-label">Students</span>
+                                    <span class="stat-num">850</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="department-card" onclick="navigateToUsersTabAndFilter('Mathematics')">
+                            <div class="dept-card-top">
+                                <div class="dept-title-area">
+                                    <div class="dept-icon-small" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                                        <span class="material-symbols-outlined">science</span>
+                                    </div>
+                                    <h3 class="dept-name">Mathematics</h3>
+                                </div>
+                                <button class="icon-btn edit-dept" title="Edit Department" onclick="event.stopPropagation()"><span class="material-symbols-outlined">edit</span></button>
+                            </div>
+                            <div class="dept-card-middle">
+                                <p class="text-muted" style="font-size: 0.85rem;">Head of Dept: Dr. Katherine Johnson</p>
+                            </div>
+                            <div class="dept-stats-boxes">
+                                <div class="stat-box">
+                                    <span class="stat-label">Staff</span>
+                                    <span class="stat-num">28</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-label">Students</span>
+                                    <span class="stat-num">420</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="department-card" onclick="navigateToUsersTabAndFilter('Engineering')">
+                            <div class="dept-card-top">
+                                <div class="dept-title-area">
+                                    <div class="dept-icon-small" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                                        <span class="material-symbols-outlined">engineering</span>
+                                    </div>
+                                    <h3 class="dept-name">Engineering</h3>
+                                </div>
+                                <button class="icon-btn edit-dept" title="Edit Department" onclick="event.stopPropagation()"><span class="material-symbols-outlined">edit</span></button>
+                            </div>
+                            <div class="dept-card-middle">
+                                <p class="text-muted" style="font-size: 0.85rem;">Head of Dept: Dr. Nikola Tesla</p>
+                            </div>
+                            <div class="dept-stats-boxes">
+                                <div class="stat-box">
+                                    <span class="stat-label">Staff</span>
+                                    <span class="stat-num">65</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-label">Students</span>
+                                    <span class="stat-num">1200</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="department-card" onclick="navigateToUsersTabAndFilter('Medicine')">
+                            <div class="dept-card-top">
+                                <div class="dept-title-area">
+                                    <div class="dept-icon-small" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                                        <span class="material-symbols-outlined">health_and_safety</span>
+                                    </div>
+                                    <h3 class="dept-name">Medicine</h3>
+                                </div>
+                                <button class="icon-btn edit-dept" title="Edit Department" onclick="event.stopPropagation()"><span class="material-symbols-outlined">edit</span></button>
+                            </div>
+                            <div class="dept-card-middle">
+                                <p class="text-muted" style="font-size: 0.85rem;">Head of Dept: Dr. Gregory House</p>
+                            </div>
+                            <div class="dept-stats-boxes">
+                                <div class="stat-box">
+                                    <span class="stat-label">Staff</span>
+                                    <span class="stat-num">112</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-label">Students</span>
+                                    <span class="stat-num">800</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="department-card" onclick="navigateToUsersTabAndFilter('Law')">
+                            <div class="dept-card-top">
+                                <div class="dept-title-area">
+                                    <div class="dept-icon-small" style="background: rgba(71, 85, 105, 0.1); color: #475569;">
+                                        <span class="material-symbols-outlined">gavel</span>
+                                    </div>
+                                    <h3 class="dept-name">Law</h3>
+                                </div>
+                                <button class="icon-btn edit-dept" title="Edit Department" onclick="event.stopPropagation()"><span class="material-symbols-outlined">edit</span></button>
+                            </div>
+                            <div class="dept-card-middle">
+                                <p class="text-muted" style="font-size: 0.85rem;">Head of Dept: Prof. Annalise Keating</p>
+                            </div>
+                            <div class="dept-stats-boxes">
+                                <div class="stat-box">
+                                    <span class="stat-label">Staff</span>
+                                    <span class="stat-num">35</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-label">Students</span>
+                                    <span class="stat-num">450</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="department-card" onclick="navigateToUsersTabAndFilter('Social Science')">
+                            <div class="dept-card-top">
+                                <div class="dept-title-area">
+                                    <div class="dept-icon-small" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                                        <span class="material-symbols-outlined">group</span>
+                                    </div>
+                                    <h3 class="dept-name">Social Science</h3>
+                                </div>
+                                <button class="icon-btn edit-dept" title="Edit Department" onclick="event.stopPropagation()"><span class="material-symbols-outlined">edit</span></button>
+                            </div>
+                            <div class="dept-card-middle">
+                                <p class="text-muted" style="font-size: 0.85rem;">Head of Dept: Dr. Jane Goodall</p>
+                            </div>
+                            <div class="dept-stats-boxes">
+                                <div class="stat-box">
+                                    <span class="stat-label">Staff</span>
+                                    <span class="stat-num">50</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-label">Students</span>
+                                    <span class="stat-num">900</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="department-card" onclick="navigateToUsersTabAndFilter('Fashion Design')">
+                            <div class="dept-card-top">
+                                <div class="dept-title-area">
+                                    <div class="dept-icon-small" style="background: rgba(236, 72, 153, 0.1); color: #ec4899;">
+                                        <span class="material-symbols-outlined">checkroom</span>
+                                    </div>
+                                    <h3 class="dept-name">Fashion Design</h3>
+                                </div>
+                                <button class="icon-btn edit-dept" title="Edit Department" onclick="event.stopPropagation()"><span class="material-symbols-outlined">edit</span></button>
+                            </div>
+                            <div class="dept-card-middle">
+                                <p class="text-muted" style="font-size: 0.85rem;">Head of Dept: Miranda Priestly</p>
+                            </div>
+                            <div class="dept-stats-boxes">
+                                <div class="stat-box">
+                                    <span class="stat-label">Staff</span>
+                                    <span class="stat-num">25</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-label">Students</span>
+                                    <span class="stat-num">320</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Add New Shortcut -->
+                        <div class="department-card add-new-dept-card" onclick="document.getElementById('add-department-modal').style.display='flex'">
+                            <span class="material-symbols-outlined">add</span>
+                            <h3>Add New Department</h3>
+                        </div>
                     </div>
                 </section>
 
@@ -785,6 +868,42 @@
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary close-profile-btn">Close</button>
                         <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Department Modal -->
+    <div id="add-department-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Department</h2>
+                <span class="close-modal" onclick="document.getElementById('add-department-modal').style.display='none'">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="add-dept-form">
+                    <div class="form-group">
+                        <label for="dept-name">Department Name</label>
+                        <input type="text" id="dept-name" placeholder="E.g., Computing" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dept-head">Head of Department</label>
+                        <input type="text" id="dept-head" placeholder="E.g., Dr. Alan Turing" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="dept-staff">Staff Count</label>
+                            <input type="number" id="dept-staff" placeholder="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="dept-students">Student Count</label>
+                            <input type="number" id="dept-students" placeholder="0" min="0">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('add-department-modal').style.display='none'">Cancel</button>
+                        <button type="submit" class="btn btn-primary" onclick="event.preventDefault(); document.getElementById('add-department-modal').style.display='none';">Add Department</button>
                     </div>
                 </form>
             </div>
