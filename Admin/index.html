@@ -866,6 +866,17 @@
             <div class="modal-body">
                 <form id="create-user-form">
                     <div class="form-row">
+                        <div class="form-group" style="flex: 0.8; min-width: 100px;">
+                            <label for="title">Title</label>
+                            <select id="title">
+                                <option value="None" selected>None</option>
+                                <option value="Mr.">Mr.</option>
+                                <option value="Ms.">Ms.</option>
+                                <option value="Mrs.">Mrs.</option>
+                                <option value="Dr.">Dr.</option>
+                                <option value="Prof.">Prof.</option>
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label for="first-name">First Name</label>
                             <input type="text" id="first-name" placeholder="Hana" required>
@@ -886,7 +897,7 @@
                         </div>
                         <div class="form-group">
                             <label for="password">Password</label>
-                            <input type="password" id="password" placeholder="Default: 123321">
+                            <input type="password" id="password" placeholder="Default: 123456">
                         </div>
                     </div>
                     <div class="form-row">
@@ -899,11 +910,15 @@
                                 <option value="admin">Administrator</option>
                             </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="department-group" style="display: none;">
                             <label for="department-input">Department</label>
                             <input type="text" id="department-input" list="department-options"
-                                placeholder="Search department..." required>
+                                placeholder="Search department...">
                             <datalist id="department-options"></datalist>
+                        </div>
+                        <div class="form-group" id="institutional-id-group" style="display: none;">
+                            <label for="institutional-id">Institutional ID</label>
+                            <input type="text" id="institutional-id" placeholder="e.g. BDU123456">
                         </div>
                     </div>
                     <div class="form-actions">

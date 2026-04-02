@@ -282,27 +282,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 5. Form Submissions
     const userForm = document.getElementById('create-user-form');
+    const roleSelect = document.getElementById('role');
+    const deptGroup = document.getElementById('department-group');
+    const deptInput = document.getElementById('department-input');
+    const instIdGroup = document.getElementById('institutional-id-group');
+    const instIdInput = document.getElementById('institutional-id');
+
+    if (roleSelect && deptGroup && deptInput) {
+        roleSelect.addEventListener('change', (e) => {
+            if (e.target.value === 'student') {
+                deptGroup.style.display = 'block';
+                deptInput.required = true;
+                if (instIdGroup && instIdInput) {
+                    instIdGroup.style.display = 'block';
+                    instIdInput.required = true;
+                }
+            } else {
+                deptGroup.style.display = 'none';
+                deptInput.required = false;
+                deptInput.value = '';
+                if (instIdGroup && instIdInput) {
+                    instIdGroup.style.display = 'none';
+                    instIdInput.required = false;
+                    instIdInput.value = '';
+                }
+            }
+        });
+    }
+
     if (userForm) {
         userForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const title = document.getElementById('title') ? document.getElementById('title').value : 'None';
             const firstName = document.getElementById('first-name').value;
             const middleName = document.getElementById('middle-name').value;
             const lastName = document.getElementById('last-name').value;
             const email = document.getElementById('email').value;
             const role = document.getElementById('role').value;
             const deptName = document.getElementById('department-input').value;
+            const instId = document.getElementById('institutional-id') ? document.getElementById('institutional-id').value : null;
             const passwordInput = document.getElementById('password').value.trim();
-            const password = passwordInput !== '' ? passwordInput : '123321';
+            const password = passwordInput !== '' ? passwordInput : '123456';
             const foundDept = allDepartments.find(d => d.name === deptName);
             const deptId = foundDept ? foundDept.id : null;
 
             const payload = {
+                title: title,
                 first_name: firstName,
                 middle_name: middleName,
                 last_name: lastName,
                 email: email,
                 role: role,
                 department_id: deptId,
+                institutional_id: instId,
                 password: password
             };
 
@@ -336,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (selectedIds.length === 0) return;
 
             const password = prompt("Enter admin password to delete:");
-            if (password !== "admin") {
+            if (password !== "123456") {
                 alert("Incorrect password. Deletion canceled.");
                 return;
             }
