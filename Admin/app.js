@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     navItems.forEach(item => {
         item.addEventListener('click', () => {
+            if (item.id === 'logout-btn') return;
+
             navItems.forEach(n => n.classList.remove('active'));
             item.classList.add('active'); // Instant switch
 
@@ -518,12 +520,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSupportTickets();
 
     // 6. Action Buttons
-    const backupBtn = document.getElementById('backup-btn');
-    if (backupBtn) {
-        backupBtn.addEventListener('click', () => {
-            alert('Backup Started! System data is being securely archived.');
-        });
-    }
 
     const triggerManualBackupBtn = document.getElementById('trigger-manual-backup');
     const backupStatusMsg = document.getElementById('backup-status-msg');
