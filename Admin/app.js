@@ -69,38 +69,16 @@ document.addEventListener('DOMContentLoaded', () => {
             diskTextEl.textContent = `${USED_STORAGE_GB}GB / ${TOTAL_STORAGE_GB}GB Used`;
         }
     };
-    
+
     updateDiskStorage();
 
     // 3. User Data & Pagination Logic
-    const usersData = [
-        { name: "Hana Alvarez", email: "hana.a@university.edu", role: "Administrator", roleClass: "role-admin", dept: "IT Support", status: "Active", statusClass: "status-active", avatarBg: "dcfce7", avatarColor: "166534" },
-        { name: "Dr. Sarah Jenkins", email: "s.jenkins@university.edu", role: "Instructor", roleClass: "role-instructor", dept: "Mathematics", status: "Active", statusClass: "status-active", avatarBg: "f3e8ff", avatarColor: "7e22ce" },
-        { name: "Michael Smith", email: "m.smith@university.edu", role: "Student", roleClass: "role-student", dept: "Engineering", status: "Suspended", statusClass: "status-suspended", avatarBg: "ffedd5", avatarColor: "c2410c" },
-        { name: "Elena Rostova", email: "e.rostova@university.edu", role: "Student", roleClass: "role-student", dept: "Physics", status: "Pending", statusClass: "status-pending", avatarBg: "e0e7ff", avatarColor: "4338ca" },
-        { name: "Prof. David Chen", email: "d.chen@university.edu", role: "Instructor", roleClass: "role-instructor", dept: "Computer Science", status: "Active", statusClass: "status-active", avatarBg: "dcfce7", avatarColor: "166534" },
-        { name: "Anita Patel", email: "a.patel@university.edu", role: "Student", roleClass: "role-student", dept: "Mathematics", status: "Active", statusClass: "status-active", avatarBg: "f3e8ff", avatarColor: "7e22ce" },
-        { name: "James Wilson", email: "j.wilson@university.edu", role: "Student", roleClass: "role-student", dept: "Engineering", status: "Pending", statusClass: "status-pending", avatarBg: "ffedd5", avatarColor: "c2410c" },
-        { name: "Marcus Johnson", email: "m.johnson@university.edu", role: "Administrator", roleClass: "role-admin", dept: "Registrar", status: "Active", statusClass: "status-active", avatarBg: "dcfce7", avatarColor: "166534" },
-        { name: "Sophie Turner", email: "s.turner@university.edu", role: "Student", roleClass: "role-student", dept: "Computer Science", status: "Suspended", statusClass: "status-suspended", avatarBg: "f3e8ff", avatarColor: "7e22ce" },
-        { name: "Dr. Luis Gomez", email: "l.gomez@university.edu", role: "Instructor", roleClass: "role-instructor", dept: "Physics", status: "Active", statusClass: "status-active", avatarBg: "e0e7ff", avatarColor: "4338ca" },
-        { name: "Emily Davis", email: "e.davis@university.edu", role: "Student", roleClass: "role-student", dept: "Biology", status: "Active", statusClass: "status-active", avatarBg: "ffedd5", avatarColor: "c2410c" },
-        { name: "Robert Taylor", email: "r.taylor@university.edu", role: "Instructor", roleClass: "role-instructor", dept: "Chemistry", status: "Active", statusClass: "status-active", avatarBg: "dcfce7", avatarColor: "166534" },
-        { name: "Jessica Brown", email: "j.brown@university.edu", role: "Administrator", roleClass: "role-admin", dept: "Admissions", status: "Active", statusClass: "status-active", avatarBg: "f3e8ff", avatarColor: "7e22ce" },
-        { name: "William Miller", email: "w.miller@university.edu", role: "Student", roleClass: "role-student", dept: "History", status: "Pending", statusClass: "status-pending", avatarBg: "e0e7ff", avatarColor: "4338ca" },
-        { name: "Ashley Wilson", email: "a.wilson2@university.edu", role: "Student", roleClass: "role-student", dept: "English", status: "Active", statusClass: "status-active", avatarBg: "ffedd5", avatarColor: "c2410c" },
-        { name: "Brian Moore", email: "b.moore@university.edu", role: "Instructor", roleClass: "role-instructor", dept: "Philosophy", status: "Suspended", statusClass: "status-suspended", avatarBg: "dcfce7", avatarColor: "166534" },
-        { name: "Kevin Jackson", email: "k.jackson@university.edu", role: "Administrator", roleClass: "role-admin", dept: "Finance", status: "Active", statusClass: "status-active", avatarBg: "f3e8ff", avatarColor: "7e22ce" },
-        { name: "Amanda White", email: "a.white@university.edu", role: "Student", roleClass: "role-student", dept: "Psychology", status: "Active", statusClass: "status-active", avatarBg: "e0e7ff", avatarColor: "4338ca" },
-        { name: "Jason Harris", email: "j.harris@university.edu", role: "Student", roleClass: "role-student", dept: "Sociology", status: "Pending", statusClass: "status-pending", avatarBg: "ffedd5", avatarColor: "c2410c" },
-        { name: "Melissa Martin", email: "m.martin@university.edu", role: "Instructor", roleClass: "role-instructor", dept: "Art History", status: "Active", statusClass: "status-active", avatarBg: "dcfce7", avatarColor: "166534" },
-        { name: "Samuel Lee", email: "s.lee@university.edu", role: "Student", roleClass: "role-student", dept: "Economics", status: "Active", statusClass: "status-active", avatarBg: "f3e8ff", avatarColor: "7e22ce" },
-        { name: "Lauren Perez", email: "l.perez@university.edu", role: "Administrator", roleClass: "role-admin", dept: "Human Resources", status: "Active", statusClass: "status-active", avatarBg: "e0e7ff", avatarColor: "4338ca" }
-    ];
-
+    let usersData = [];
+    let filteredUsers = [];
+    let allDepartments = [];
     let currentPage = 1;
     const itemsPerPage = 10;
-    
+
     const searchInput = document.getElementById('user-search');
     const roleFilter = document.getElementById('role-filter');
     const usersTableBody = document.getElementById('users-table-body');
@@ -108,7 +86,54 @@ document.addEventListener('DOMContentLoaded', () => {
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
 
-    let filteredUsers = [...usersData];
+    async function fetchUsers() {
+        try {
+            const response = await fetch('http://localhost:5000/api/users');
+            const result = await response.json();
+            if (result.success) {
+                usersData = result.data.map(u => ({
+                    id: u.id,
+                    name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Unknown',
+                    email: u.email,
+                    role: u.role ? (u.role.charAt(0).toUpperCase() + u.role.slice(1)) : 'Student',
+                    roleClass: u.role === 'admin' ? 'role-admin' : (u.role === 'instructor' ? 'role-instructor' : 'role-student'),
+                    dept: u.department_name || '-',
+                    status: u.is_active ? 'Active' : 'Suspended',
+                    statusClass: u.is_active ? 'status-active' : 'status-suspended',
+                    avatarBg: 'dcfce7',
+                    avatarColor: '166534'
+                }));
+                filterUsers();
+            }
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        }
+    }
+
+    async function fetchDepartments() {
+        try {
+            const response = await fetch('http://localhost:5000/api/departments');
+            const result = await response.json();
+            if (result.success) {
+                allDepartments = result.data;
+                const depDataList = document.getElementById('department-options');
+                if (depDataList) {
+                    depDataList.innerHTML = '';
+                    result.data.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d.name;
+                        depDataList.appendChild(opt);
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching departments:', error);
+        }
+    }
+
+    // Initial load
+    fetchUsers();
+    fetchDepartments();
 
     function renderUserTable() {
         if (!usersTableBody) return;
@@ -118,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(() => {
             usersTableBody.innerHTML = '';
-            
+
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
             const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
@@ -126,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
             paginatedUsers.forEach(user => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="checkbox-col"><input type="checkbox" class="row-checkbox"></td>
+                    <td class="checkbox-col"><input type="checkbox" class="row-checkbox" value="${user.id}"></td>
                     <td>
                         <div class="user-info-cell">
                             <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=${user.avatarBg}&color=${user.avatarColor}&rounded=true" alt="Avatar" class="avatar-sm">
@@ -139,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td><span class="badge ${user.statusClass}">${user.status}</span></td>
                     <td class="actions-cell" style="justify-content: center;">
                         <label class="toggle-switch" title="Toggle Status">
-                            <input type="checkbox" ${user.status === 'Suspended' ? '' : 'checked'}>
+                            <input type="checkbox" class="status-toggle" data-id="${user.id}" ${user.status === 'Suspended' ? '' : 'checked'}>
                             <span class="slider round"></span>
                         </label>
                     </td>
@@ -151,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalItems = filteredUsers.length;
             const currentEnd = Math.min(endIndex, totalItems);
             const currentStart = totalItems === 0 ? 0 : startIndex + 1;
-            
+
             if (paginationText) {
                 paginationText.textContent = `Showing ${currentStart}-${currentEnd} of ${totalItems} users`;
             }
@@ -164,7 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Re-attach drawer event listeners for newly injected elements
             attachDrawerListeners();
             attachCheckboxListeners();
-            
+            attachToggleListeners();
+
             // Apply fade-in
             usersTableBody.style.opacity = '1';
         }, 150); // 150ms structural transition
@@ -196,9 +222,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const roleTerm = roleFilter.value.toLowerCase();
 
         filteredUsers = usersData.filter(user => {
-            const matchesSearch = user.name.toLowerCase().includes(searchTerm) || 
-                                  user.email.toLowerCase().includes(searchTerm) ||
-                                  user.dept.toLowerCase().includes(searchTerm);
+            const matchesSearch = user.name.toLowerCase().includes(searchTerm) ||
+                user.email.toLowerCase().includes(searchTerm) ||
+                user.dept.toLowerCase().includes(searchTerm);
             const matchesRole = roleTerm === 'all' || user.role.toLowerCase() === roleTerm;
             return matchesSearch && matchesRole;
         });
@@ -208,11 +234,11 @@ document.addEventListener('DOMContentLoaded', () => {
         renderUserTable();
     }
 
-    window.navigateToUsersTabAndFilter = function(departmentName) {
+    window.navigateToUsersTabAndFilter = function (departmentName) {
         // Activate 'users' tab
         const usersTab = document.querySelector('.nav-item[data-target="users"]');
         if (usersTab) usersTab.click();
-        
+
         // Set the filter
         const searchInput = document.getElementById('user-search');
         if (searchInput) {
@@ -257,13 +283,103 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. Form Submissions
     const userForm = document.getElementById('create-user-form');
     if (userForm) {
-        userForm.addEventListener('submit', (e) => {
+        userForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            // Basic validation is handled by HTML5 required attributes
-            const name = document.getElementById('name').value;
-            alert(`User account for ${name} created successfully! (Dummy action)`);
-            modal.classList.remove('show');
-            userForm.reset();
+            const firstName = document.getElementById('first-name').value;
+            const middleName = document.getElementById('middle-name').value;
+            const lastName = document.getElementById('last-name').value;
+            const email = document.getElementById('email').value;
+            const role = document.getElementById('role').value;
+            const deptName = document.getElementById('department-input').value;
+            const foundDept = allDepartments.find(d => d.name === deptName);
+            const deptId = foundDept ? foundDept.id : null;
+
+            const payload = {
+                first_name: firstName,
+                middle_name: middleName,
+                last_name: lastName,
+                email: email,
+                role: role,
+                department_id: deptId
+            };
+
+            try {
+                const response = await fetch('http://localhost:5000/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`User account for ${firstName} created successfully!`);
+                    modal.classList.remove('show');
+                    userForm.reset();
+                    fetchUsers();
+                } else {
+                    alert(`Failed to create account: ${result.message}`);
+                }
+            } catch (error) {
+                alert(`Error creating user account: ${error.message}`);
+            }
+        });
+    }
+
+    const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.addEventListener('click', async () => {
+            const selectedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
+            const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+            if (selectedIds.length === 0) return;
+
+            const password = prompt("Enter admin password to delete:");
+            if (password !== "admin") {
+                alert("Incorrect password. Deletion canceled.");
+                return;
+            }
+
+            try {
+                for (const id of selectedIds) {
+                    await fetch(`http://localhost:5000/api/users/${id}`, { method: 'DELETE' });
+                }
+                alert("Selected users deleted successfully.");
+
+                // Clear selection
+                const bulkActionBar = document.getElementById('bulk-action-bar');
+                if (bulkActionBar) bulkActionBar.style.display = 'none';
+
+                fetchUsers();
+            } catch (error) {
+                alert("An error occurred while deleting users.");
+            }
+        });
+    }
+
+    const suspendSelectedBtn = document.getElementById('suspend-selected-btn');
+    if (suspendSelectedBtn) {
+        suspendSelectedBtn.addEventListener('click', async () => {
+            const selectedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
+            const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+            if (selectedIds.length === 0) return;
+
+            try {
+                for (const id of selectedIds) {
+                    await fetch(`http://localhost:5000/api/users/${id}/status`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ is_active: false })
+                    });
+                }
+                alert("Selected users suspended successfully.");
+
+                // Clear selection
+                const bulkActionBar = document.getElementById('bulk-action-bar');
+                if (bulkActionBar) bulkActionBar.style.display = 'none';
+
+                fetchUsers();
+            } catch (error) {
+                alert("An error occurred while suspending users.");
+            }
         });
     }
 
@@ -403,11 +519,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 7. Chart Data Configurations
     const engagementCtx = document.getElementById('engagement-chart');
     const pieCtx = document.getElementById('departmentPieChart');
-    
+
     // Gradient definitions
     let engagementGradient = null;
     let hoverGradient = null;
-    
+
     if (engagementCtx) {
         const ctx = engagementCtx.getContext('2d');
         engagementGradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -544,7 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const rowCheckboxes = document.querySelectorAll('.row-checkbox');
         if (bulkActionBar && rowCheckboxes.length > 0) {
             rowCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
+                checkbox.addEventListener('change', function () {
                     const tr = this.closest('tr');
                     if (this.checked) {
                         tr.classList.add('row-selected');
@@ -553,11 +669,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
-                    
+
                     if (checkedCount > 0) {
                         bulkActionBar.style.display = 'flex';
                         bulkActionCount.textContent = `${checkedCount} User${checkedCount > 1 ? 's' : ''} Selected`;
-                        
+
                         if (globalEditBtn) {
                             if (checkedCount === 1) {
                                 globalEditBtn.classList.add('active');
@@ -578,6 +694,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
         }
+    }
+
+    function attachToggleListeners() {
+        const toggleBoxes = document.querySelectorAll('.status-toggle');
+        toggleBoxes.forEach(toggle => {
+            // Remove previous listeners
+            const newToggle = toggle.cloneNode(true);
+            toggle.parentNode.replaceChild(newToggle, toggle);
+
+            newToggle.addEventListener('change', async function () {
+                const id = this.getAttribute('data-id');
+                const isActive = this.checked;
+                try {
+                    await fetch(`http://localhost:5000/api/users/${id}/status`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ is_active: isActive })
+                    });
+
+                    // Update user's status in usersData without refetching fully if we want,
+                    // but calling fetchUsers is easier to ensure data is synced:
+                    fetchUsers();
+                } catch (e) {
+                    console.error('Error toggling status:', e);
+                }
+            });
+        });
     }
 
     // 9. Profile Drawer Logic
@@ -610,8 +753,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // remove existing listener avoiding duplicates
                 const newNameEl = nameEl.cloneNode(true);
                 nameEl.parentNode.replaceChild(newNameEl, nameEl);
-                
-                newNameEl.addEventListener('click', function() {
+
+                newNameEl.addEventListener('click', function () {
                     openDrawerWithRowData(this.closest('tr'));
                 });
             });
