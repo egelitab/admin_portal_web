@@ -291,6 +291,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const email = document.getElementById('email').value;
             const role = document.getElementById('role').value;
             const deptName = document.getElementById('department-input').value;
+            const passwordInput = document.getElementById('password').value.trim();
+            const password = passwordInput !== '' ? passwordInput : '123321';
             const foundDept = allDepartments.find(d => d.name === deptName);
             const deptId = foundDept ? foundDept.id : null;
 
@@ -300,7 +302,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 last_name: lastName,
                 email: email,
                 role: role,
-                department_id: deptId
+                department_id: deptId,
+                password: password
             };
 
             try {
