@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let usersData = [];
     let filteredUsers = [];
     let allDepartments = [];
+    let allFaculties = [];
     let currentPage = 1;
     const itemsPerPage = 10;
 
@@ -106,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     avatarColor: '166534'
                 }));
                 filterUsers();
+                if (typeof renderDepartments === 'function') renderDepartments();
             }
         } catch (error) {
             console.error('Error fetching users:', error);
@@ -127,15 +129,108 @@ document.addEventListener('DOMContentLoaded', () => {
                         depDataList.appendChild(opt);
                     });
                 }
+
+                const facultyFilter = document.getElementById('faculty-filter');
+                if (facultyFilter) {
+                    // avoid duplicates by preserving the 'All' option
+                    facultyFilter.innerHTML = '<option value="all">All Faculties</option>';
+                    const uniqueFaculties = [...new Set(allDepartments.map(d => d.faculty_name).filter(Boolean))];
+                    uniqueFaculties.forEach(faculty => {
+                        const opt = document.createElement('option');
+                        opt.value = faculty;
+                        opt.textContent = faculty;
+                        facultyFilter.appendChild(opt);
+                    });
+
+                    facultyFilter.addEventListener('change', renderDepartments);
+                }
+
+                renderDepartments();
             }
         } catch (error) {
             console.error('Error fetching departments:', error);
         }
     }
 
+    function renderDepartments() {
+        const gridContainer = document.getElementById('departments-grid-container');
+        if (!gridContainer) return;
+
+        const facultyFilter = document.getElementById('faculty-filter');
+        const selectedFaculty = facultyFilter ? facultyFilter.value : 'all';
+
+        const filteredDivs = allDepartments.filter(d => {
+            if (selectedFaculty === 'all') return true;
+            return d.faculty_name === selectedFaculty;
+        });
+
+        const addNewCardHtml = `
+            <div class="department-card add-new-dept-card" onclick="document.getElementById('add-department-modal').style.display='flex'">
+                <span class="material-symbols-outlined">add</span>
+                <h3>Add New Department</h3>
+            </div>
+        `;
+
+        const cardsHtml = filteredDivs.map(dept => {
+            const staffCount = usersData.filter(u => u.dept === dept.name && ['Admin', 'Instructor', 'Administrator'].includes(u.role)).length;
+            const studentCount = usersData.filter(u => u.dept === dept.name && u.role === 'Student').length;
+
+            return `
+            <div class="department-card" onclick="navigateToUsersTabAndFilter('${dept.name}')">
+                <div class="dept-card-top">
+                    <div class="dept-title-area">
+                        <div class="dept-icon-small" style="background: rgba(48, 86, 211, 0.1); color: var(--primary);">
+                            <span class="material-symbols-outlined">domain</span>
+                        </div>
+                        <h3 class="dept-name" title="${dept.name}" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px;">${dept.name}</h3>
+                    </div>
+                    <button class="icon-btn edit-dept" title="Edit Department" onclick="event.stopPropagation()"><span class="material-symbols-outlined">edit</span></button>
+                </div>
+                <div class="dept-card-middle">
+                    <p class="text-muted" style="font-size: 0.85rem;" title="${dept.faculty_name || 'N/A'}">${dept.faculty_name || 'N/A'}</p>
+                </div>
+                <div class="dept-stats-boxes">
+                    <div class="stat-box">
+                        <span class="stat-label">Staff</span>
+                        <span class="stat-num">${staffCount || 0}</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Students</span>
+                        <span class="stat-num">${studentCount || 0}</span>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+
+        gridContainer.innerHTML = cardsHtml + addNewCardHtml;
+    }
+
+    async function fetchFaculties() {
+        try {
+            const response = await fetch('http://localhost:5000/api/departments/faculties');
+            const result = await response.json();
+            if (result.success) {
+                allFaculties = result.data;
+                const deptFacultyList = document.getElementById('dept-faculty');
+                if (deptFacultyList) {
+                    deptFacultyList.innerHTML = '<option value="">Select Faculty...</option>';
+                    allFaculties.forEach(f => {
+                        const opt = document.createElement('option');
+                        opt.value = f.id;
+                        opt.textContent = f.name;
+                        deptFacultyList.appendChild(opt);
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching faculties:', error);
+        }
+    }
+
     // Initial load
     fetchUsers();
     fetchDepartments();
+    fetchFaculties();
 
     function renderUserTable() {
         if (!usersTableBody) return;
@@ -308,6 +403,35 @@ document.addEventListener('DOMContentLoaded', () => {
                     instIdInput.required = false;
                     instIdInput.value = '';
                 }
+            }
+        });
+    }
+
+    const addDeptForm = document.getElementById('add-dept-form');
+    if (addDeptForm) {
+        addDeptForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('dept-name').value.trim();
+            const facultyId = document.getElementById('dept-faculty').value;
+
+            try {
+                const response = await fetch('http://localhost:5000/api/departments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: nameInput, faculty_id: facultyId })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Department added successfully!');
+                    document.getElementById('add-department-modal').style.display = 'none';
+                    addDeptForm.reset();
+                    fetchDepartments(); // Refresh grid
+                } else {
+                    alert(`Failed to add department: ${result.message}`);
+                }
+            } catch (error) {
+                alert(`Error adding department: ${error.message}`);
             }
         });
     }

@@ -373,212 +373,20 @@
                 <section id="departments" class="view-section">
                     <div class="section-header">
                         <h2>University Departments</h2>
-                        <button class="btn btn-primary"
-                            onclick="document.getElementById('add-department-modal').style.display='flex'">
-                            <span class="material-symbols-outlined">add</span>
-                            Add Department
-                        </button>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <select id="faculty-filter" class="filter-dropdown"
+                                style="padding: 8px 16px; border-radius: 12px; border: 1px solid #E2E8F0; outline: none;">
+                                <option value="all">All Faculties</option>
+                            </select>
+                            <button class="btn btn-primary"
+                                onclick="document.getElementById('add-department-modal').style.display='flex'">
+                                <span class="material-symbols-outlined">add</span>
+                                Add Department
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="departments-grid">
-                        <div class="department-card" onclick="navigateToUsersTabAndFilter('Computer Science')">
-                            <div class="dept-card-top">
-                                <div class="dept-title-area">
-                                    <div class="dept-icon-small"
-                                        style="background: rgba(48, 86, 211, 0.1); color: var(--primary);">
-                                        <span class="material-symbols-outlined">computer</span>
-                                    </div>
-                                    <h3 class="dept-name">Computer Science</h3>
-                                </div>
-                                <button class="icon-btn edit-dept" title="Edit Department"
-                                    onclick="event.stopPropagation()"><span
-                                        class="material-symbols-outlined">edit</span></button>
-                            </div>
-                            <div class="dept-card-middle">
-                                <p class="text-muted" style="font-size: 0.85rem;">Head of Dept: Dr. Alan Turing</p>
-                            </div>
-                            <div class="dept-stats-boxes">
-                                <div class="stat-box">
-                                    <span class="stat-label">Staff</span>
-                                    <span class="stat-num">42</span>
-                                </div>
-                                <div class="stat-box">
-                                    <span class="stat-label">Students</span>
-                                    <span class="stat-num">850</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="department-card" onclick="navigateToUsersTabAndFilter('Mathematics')">
-                            <div class="dept-card-top">
-                                <div class="dept-title-area">
-                                    <div class="dept-icon-small"
-                                        style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
-                                        <span class="material-symbols-outlined">science</span>
-                                    </div>
-                                    <h3 class="dept-name">Mathematics</h3>
-                                </div>
-                                <button class="icon-btn edit-dept" title="Edit Department"
-                                    onclick="event.stopPropagation()"><span
-                                        class="material-symbols-outlined">edit</span></button>
-                            </div>
-                            <div class="dept-card-middle">
-                                <p class="text-muted" style="font-size: 0.85rem;">Head of Dept: Dr. Katherine Johnson
-                                </p>
-                            </div>
-                            <div class="dept-stats-boxes">
-                                <div class="stat-box">
-                                    <span class="stat-label">Staff</span>
-                                    <span class="stat-num">28</span>
-                                </div>
-                                <div class="stat-box">
-                                    <span class="stat-label">Students</span>
-                                    <span class="stat-num">420</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="department-card" onclick="navigateToUsersTabAndFilter('Engineering')">
-                            <div class="dept-card-top">
-                                <div class="dept-title-area">
-                                    <div class="dept-icon-small"
-                                        style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
-                                        <span class="material-symbols-outlined">engineering</span>
-                                    </div>
-                                    <h3 class="dept-name">Engineering</h3>
-                                </div>
-                                <button class="icon-btn edit-dept" title="Edit Department"
-                                    onclick="event.stopPropagation()"><span
-                                        class="material-symbols-outlined">edit</span></button>
-                            </div>
-                            <div class="dept-card-middle">
-                                <p class="text-muted" style="font-size: 0.85rem;">Head of Dept: Dr. Nikola Tesla</p>
-                            </div>
-                            <div class="dept-stats-boxes">
-                                <div class="stat-box">
-                                    <span class="stat-label">Staff</span>
-                                    <span class="stat-num">65</span>
-                                </div>
-                                <div class="stat-box">
-                                    <span class="stat-label">Students</span>
-                                    <span class="stat-num">1200</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="department-card" onclick="navigateToUsersTabAndFilter('Medicine')">
-                            <div class="dept-card-top">
-                                <div class="dept-title-area">
-                                    <div class="dept-icon-small"
-                                        style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
-                                        <span class="material-symbols-outlined">health_and_safety</span>
-                                    </div>
-                                    <h3 class="dept-name">Medicine</h3>
-                                </div>
-                                <button class="icon-btn edit-dept" title="Edit Department"
-                                    onclick="event.stopPropagation()"><span
-                                        class="material-symbols-outlined">edit</span></button>
-                            </div>
-                            <div class="dept-card-middle">
-                                <p class="text-muted" style="font-size: 0.85rem;">Head of Dept: Dr. Gregory House</p>
-                            </div>
-                            <div class="dept-stats-boxes">
-                                <div class="stat-box">
-                                    <span class="stat-label">Staff</span>
-                                    <span class="stat-num">112</span>
-                                </div>
-                                <div class="stat-box">
-                                    <span class="stat-label">Students</span>
-                                    <span class="stat-num">800</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="department-card" onclick="navigateToUsersTabAndFilter('Law')">
-                            <div class="dept-card-top">
-                                <div class="dept-title-area">
-                                    <div class="dept-icon-small"
-                                        style="background: rgba(71, 85, 105, 0.1); color: #475569;">
-                                        <span class="material-symbols-outlined">gavel</span>
-                                    </div>
-                                    <h3 class="dept-name">Law</h3>
-                                </div>
-                                <button class="icon-btn edit-dept" title="Edit Department"
-                                    onclick="event.stopPropagation()"><span
-                                        class="material-symbols-outlined">edit</span></button>
-                            </div>
-                            <div class="dept-card-middle">
-                                <p class="text-muted" style="font-size: 0.85rem;">Head of Dept: Prof. Annalise Keating
-                                </p>
-                            </div>
-                            <div class="dept-stats-boxes">
-                                <div class="stat-box">
-                                    <span class="stat-label">Staff</span>
-                                    <span class="stat-num">35</span>
-                                </div>
-                                <div class="stat-box">
-                                    <span class="stat-label">Students</span>
-                                    <span class="stat-num">450</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="department-card" onclick="navigateToUsersTabAndFilter('Social Science')">
-                            <div class="dept-card-top">
-                                <div class="dept-title-area">
-                                    <div class="dept-icon-small"
-                                        style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
-                                        <span class="material-symbols-outlined">group</span>
-                                    </div>
-                                    <h3 class="dept-name">Social Science</h3>
-                                </div>
-                                <button class="icon-btn edit-dept" title="Edit Department"
-                                    onclick="event.stopPropagation()"><span
-                                        class="material-symbols-outlined">edit</span></button>
-                            </div>
-                            <div class="dept-card-middle">
-                                <p class="text-muted" style="font-size: 0.85rem;">Head of Dept: Dr. Jane Goodall</p>
-                            </div>
-                            <div class="dept-stats-boxes">
-                                <div class="stat-box">
-                                    <span class="stat-label">Staff</span>
-                                    <span class="stat-num">50</span>
-                                </div>
-                                <div class="stat-box">
-                                    <span class="stat-label">Students</span>
-                                    <span class="stat-num">900</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="department-card" onclick="navigateToUsersTabAndFilter('Fashion Design')">
-                            <div class="dept-card-top">
-                                <div class="dept-title-area">
-                                    <div class="dept-icon-small"
-                                        style="background: rgba(236, 72, 153, 0.1); color: #ec4899;">
-                                        <span class="material-symbols-outlined">checkroom</span>
-                                    </div>
-                                    <h3 class="dept-name">Fashion Design</h3>
-                                </div>
-                                <button class="icon-btn edit-dept" title="Edit Department"
-                                    onclick="event.stopPropagation()"><span
-                                        class="material-symbols-outlined">edit</span></button>
-                            </div>
-                            <div class="dept-card-middle">
-                                <p class="text-muted" style="font-size: 0.85rem;">Head of Dept: Miranda Priestly</p>
-                            </div>
-                            <div class="dept-stats-boxes">
-                                <div class="stat-box">
-                                    <span class="stat-label">Staff</span>
-                                    <span class="stat-num">25</span>
-                                </div>
-                                <div class="stat-box">
-                                    <span class="stat-label">Students</span>
-                                    <span class="stat-num">320</span>
-                                </div>
-                            </div>
-                        </div>
-
+                    <div class="departments-grid" id="departments-grid-container">
                         <!-- Add New Shortcut -->
                         <div class="department-card add-new-dept-card"
                             onclick="document.getElementById('add-department-modal').style.display='flex'">
@@ -980,28 +788,19 @@
                 <form id="add-dept-form">
                     <div class="form-group">
                         <label for="dept-name">Department Name</label>
-                        <input type="text" id="dept-name" placeholder="E.g., Computing" required>
+                        <input type="text" id="dept-name" placeholder="E.g., Computer Science" required>
                     </div>
                     <div class="form-group">
-                        <label for="dept-head">Head of Department</label>
-                        <input type="text" id="dept-head" placeholder="E.g., Dr. Alan Turing" required>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="dept-staff">Staff Count</label>
-                            <input type="number" id="dept-staff" placeholder="0" min="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="dept-students">Student Count</label>
-                            <input type="number" id="dept-students" placeholder="0" min="0">
-                        </div>
+                        <label for="dept-faculty">Faculty</label>
+                        <select id="dept-faculty" required>
+                            <option value="">Select Faculty...</option>
+                            <!-- Injected dynamically via JS -->
+                        </select>
                     </div>
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary"
                             onclick="document.getElementById('add-department-modal').style.display='none'">Cancel</button>
-                        <button type="submit" class="btn btn-primary"
-                            onclick="event.preventDefault(); document.getElementById('add-department-modal').style.display='none';">Add
-                            Department</button>
+                        <button type="submit" class="btn btn-primary">Add Department</button>
                     </div>
                 </form>
             </div>
