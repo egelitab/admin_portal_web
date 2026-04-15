@@ -287,33 +287,66 @@
                     <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--text-dark); margin-bottom: 12px;">User
                         Directory</h2>
 
-                    <!-- Search & Filter Bar -->
-                    <div class="filter-bar" style="display: flex; gap: 16px; margin-bottom: 16px; align-items: center;">
-                        <input type="text" id="user-search" placeholder="Search users by name or email..."
-                            style="flex: 1; min-width: 250px; height: 40px; padding: 0 16px; border: 1px solid #E2E8F0; border-radius: 12px; outline: none; transition: var(--transition); box-sizing: border-box;">
-                        <div class="global-actions"
-                            style="display: flex; align-items: center; gap: 8px; border-right: 1px solid #E2E8F0; padding-right: 16px;">
-                            <span
-                                style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">User
-                                Actions:</span>
-                            <button id="global-edit-btn" class="icon-btn global-action-btn" title="Edit User" disabled
-                                style="opacity: 0.4; cursor: not-allowed;"><span
-                                    class="material-symbols-outlined">edit</span></button>
+                    <!-- Categorized Filter Bar -->
+                    <div class="card" style="margin-bottom: 24px; padding: 20px;">
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; align-items: end;">
+                            <div class="form-group" style="margin: 0;">
+                                <label
+                                    style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; display: block;">Faculty</label>
+                                <select id="faculty-filter" class="filter-dropdown" style="width: 100%;">
+                                    <option value="all">All Faculties</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label
+                                    style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; display: block;">Department</label>
+                                <select id="dept-filter" class="filter-dropdown" style="width: 100%;">
+                                    <option value="all">All Departments</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label
+                                    style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; display: block;">Year</label>
+                                <select id="year-filter" class="filter-dropdown" style="width: 100%;">
+                                    <option value="all">All Years</option>
+                                    <option value="1">Year 1</option>
+                                    <option value="2">Year 2</option>
+                                    <option value="3">Year 3</option>
+                                    <option value="4">Year 4</option>
+                                    <option value="5">Year 5</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label
+                                    style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; display: block;">Section</label>
+                                <select id="section-filter" class="filter-dropdown" style="width: 100%;">
+                                    <option value="all">All Sections</option>
+                                    <option value="Section A">Section A</option>
+                                    <option value="Section B">Section B</option>
+                                    <option value="Section C">Section C</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label
+                                    style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; display: block;">Role</label>
+                                <select id="role-filter" class="filter-dropdown" style="width: 100%;">
+                                    <option value="all">All Roles</option>
+                                    <option value="student">Student</option>
+                                    <option value="instructor">Instructor</option>
+                                    <option value="admin">Administrator</option>
+                                </select>
+                            </div>
                         </div>
-
-                        <div style="display: flex; gap: 12px; margin-left: auto; align-items: center;">
-                            <select id="role-filter" class="filter-dropdown">
-                                <option value="all">All Roles</option>
-                                <option value="student">Student</option>
-                                <option value="instructor">Instructor</option>
-                                <option value="admin">Administrator</option>
-                            </select>
-                            <button class="btn btn-secondary" style="border-radius: 12px; padding: 8px 16px;">
-                                <span class="material-symbols-outlined">filter_list</span> Filter
-                            </button>
-                            <button class="btn btn-secondary" style="border-radius: 12px; padding: 8px 16px;">
-                                <span class="material-symbols-outlined">download</span> Export
-                            </button>
+                        <div style="margin-top: 15px; display: flex; gap: 15px; align-items: center;">
+                            <div class="search-box" style="flex: 1; position: relative;">
+                                <span class="material-symbols-outlined"
+                                    style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">search</span>
+                                <input type="text" id="user-search" placeholder="Search by name, email or ID..."
+                                    style="width: 100%; padding: 10px 10px 10px 40px; border-radius: 12px; border: 1px solid var(--border); outline: none;">
+                            </div>
+                            <button id="reset-filters" class="btn btn-secondary" style="white-space: nowrap;">Reset
+                                Filters</button>
                         </div>
                     </div>
 

@@ -223,13 +223,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     role: u.role ? (u.role.charAt(0).toUpperCase() + u.role.slice(1)) : 'Student',
                     roleClass: u.role === 'admin' ? 'role-admin' : (u.role === 'instructor' ? 'role-instructor' : 'role-student'),
                     dept: u.department_name || '-',
+                    faculty: u.faculty_name || '-',
+                    year: u.year || '-',
+                    section: u.section || '-',
                     status: u.is_active ? 'Active' : 'Suspended',
                     statusClass: u.is_active ? 'status-active' : 'status-suspended',
                     avatarBg: 'dcfce7',
                     avatarColor: '166534'
                 }));
                 filterUsers();
-                if (typeof renderDepartments === 'function') renderDepartments();
             }
         } catch (error) {
             console.error('Error fetching users:', error);
@@ -253,8 +255,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const courseDeptSelect = document.getElementById('course-dept');
+                const deptFilterSelect = document.getElementById('dept-filter');
+
                 if (courseDeptSelect) {
-                    const currentVal = courseDeptSelect.value;
                     courseDeptSelect.innerHTML = '<option value="">Select Department...</option>';
                     result.data.forEach(d => {
                         const opt = document.createElement('option');
@@ -262,8 +265,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         opt.textContent = d.name;
                         courseDeptSelect.appendChild(opt);
                     });
-                    courseDeptSelect.value = currentVal;
                 }
+
+                if (deptFilterSelect) {
+                    deptFilterSelect.innerHTML = '<option value="all">All Departments</option>';
+                    result.data.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d.name;
+                        opt.textContent = d.name;
+                        deptFilterSelect.appendChild(opt);
+                    });
+                }
+
                 renderDepartments();
             }
         } catch (error) {
@@ -330,6 +343,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             if (result.success) {
                 allFaculties = result.data;
+                const facultyFilterList = document.getElementById('faculty-filter');
+                if (facultyFilterList) {
+                    facultyFilterList.innerHTML = '<option value="all">All Faculties</option>';
+                    allFaculties.forEach(f => {
+                        const opt = document.createElement('option');
+                        opt.value = f.name;
+                        opt.textContent = f.name;
+                        facultyFilterList.appendChild(opt);
+                    });
+                }
+
                 const deptFacultyList = document.getElementById('dept-faculty');
                 if (deptFacultyList) {
                     deptFacultyList.innerHTML = '<option value="">Select Faculty...</option>';
@@ -346,7 +370,81 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Initial load calls removed here, now in initDashboard()
+    // --- 3. Filtering Logic ---
+    const facultyFilter = document.getElementById('faculty-filter');
+    const deptFilter = document.getElementById('dept-filter');
+    const yearFilter = document.getElementById('year-filter');
+    const sectionFilter = document.getElementById('section-filter');
+    const resetBtn = document.getElementById('reset-filters');
+
+    function filterUsers() {
+        const query = searchInput.value.toLowerCase();
+        const role = roleFilter.value.toLowerCase();
+        const faculty = facultyFilter ? facultyFilter.value : 'all';
+        const dept = deptFilter ? deptFilter.value : 'all';
+        const year = yearFilter ? yearFilter.value : 'all';
+        const section = sectionFilter ? sectionFilter.value : 'all';
+
+        filteredUsers = usersData.filter(user => {
+            const matchSearch = user.name.toLowerCase().includes(query) ||
+                user.email.toLowerCase().includes(query) ||
+                (user.institutional_id && user.institutional_id.toLowerCase().includes(query));
+            const matchRole = role === 'all' || user.role.toLowerCase() === role;
+            const matchFaculty = faculty === 'all' || user.faculty === faculty;
+            const matchDept = dept === 'all' || user.dept === dept;
+            const matchYear = year === 'all' || String(user.year) === year;
+            const matchSection = section === 'all' || user.section === section;
+
+            return matchSearch && matchRole && matchFaculty && matchDept && matchYear && matchSection;
+        });
+
+        currentPage = 1;
+        renderUserTable();
+    }
+
+    // Event Listeners for Filters
+    if (searchInput) searchInput.addEventListener('input', filterUsers);
+    if (roleFilter) roleFilter.addEventListener('change', filterUsers);
+    if (facultyFilter) {
+        facultyFilter.addEventListener('change', () => {
+            // Dependent Department Filter Update
+            if (facultyFilter.value === 'all') {
+                // reset dept filter options to all depts
+                deptFilter.innerHTML = '<option value="all">All Departments</option>';
+                allDepartments.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.name;
+                    opt.textContent = d.name;
+                    deptFilter.appendChild(opt);
+                });
+            } else {
+                const filteredDepts = allDepartments.filter(d => d.faculty_name === facultyFilter.value);
+                deptFilter.innerHTML = '<option value="all">All Departments</option>';
+                filteredDepts.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.name;
+                    opt.textContent = d.name;
+                    deptFilter.appendChild(opt);
+                });
+            }
+            filterUsers();
+        });
+    }
+    if (deptFilter) deptFilter.addEventListener('change', filterUsers);
+    if (yearFilter) yearFilter.addEventListener('change', filterUsers);
+    if (sectionFilter) sectionFilter.addEventListener('change', filterUsers);
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            roleFilter.value = 'all';
+            facultyFilter.value = 'all';
+            deptFilter.value = 'all';
+            yearFilter.value = 'all';
+            sectionFilter.value = 'all';
+            filterUsers();
+        });
+    }
 
     function renderUserTable() {
         if (!usersTableBody) return;
@@ -1140,23 +1238,57 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateChartsWithData(deptBreakdown) {
         if (!pieCtx || !deptBreakdown) return;
 
-        // Find existing chart instance or create new
+        // Sort by count descending
+        deptBreakdown.sort((a, b) => b.count - a.count);
+
         const chart = Chart.getChart(pieCtx);
         if (chart) {
             chart.data.labels = deptBreakdown.map(d => d.name);
             chart.data.datasets[0].data = deptBreakdown.map(d => d.count);
             chart.update();
 
-            // Update custom legend
             const legendContainer = document.querySelector('.donut-legend');
             if (legendContainer) {
                 const total = deptBreakdown.reduce((sum, d) => sum + d.count, 0);
-                legendContainer.innerHTML = deptBreakdown.map((d, i) => `
-                    <div class="legend-item">
-                        <span class="dot" style="background: ${chart.data.datasets[0].backgroundColor[i % 5]};"></span>
-                        ${d.name} (${Math.round((d.count / total) * 100)}%)
-                    </div>
-                `).join('');
+                const colors = chart.data.datasets[0].backgroundColor;
+
+                const renderLegendItems = (items, colorOffset = 0) => {
+                    return items.map((d, i) => `
+                        <div class="legend-item" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span class="dot" style="width: 10px; height: 10px; border-radius: 50%; background: ${colors[(i + colorOffset) % colors.length]};"></span>
+                            <span style="font-size: 0.85rem; color: var(--text-dark); flex: 1;">${d.name}</span>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">${Math.round((d.count / total) * 100)}%</span>
+                        </div>
+                    `).join('');
+                };
+
+                const INITIAL_LIMIT = 4;
+                const visibleItems = deptBreakdown.slice(0, INITIAL_LIMIT);
+                const hiddenItems = deptBreakdown.slice(INITIAL_LIMIT);
+
+                legendContainer.innerHTML = `
+                    <div id="visible-depts">${renderLegendItems(visibleItems)}</div>
+                    ${hiddenItems.length > 0 ? `
+                        <div id="hidden-depts" style="display: none;">${renderLegendItems(hiddenItems, INITIAL_LIMIT)}</div>
+                        <button id="see-more-depts" style="background: transparent; border: none; color: var(--primary); font-size: 0.8rem; font-weight: 600; cursor: pointer; padding: 0; margin-top: 5px;">
+                            See More (+${hiddenItems.length})
+                        </button>
+                    ` : ''}
+                `;
+
+                const seeMoreBtn = document.getElementById('see-more-depts');
+                if (seeMoreBtn) {
+                    seeMoreBtn.addEventListener('click', () => {
+                        const hiddenEl = document.getElementById('hidden-depts');
+                        if (hiddenEl.style.display === 'none') {
+                            hiddenEl.style.display = 'block';
+                            seeMoreBtn.textContent = 'See Less';
+                        } else {
+                            hiddenEl.style.display = 'none';
+                            seeMoreBtn.textContent = `See More (+${hiddenItems.length})`;
+                        }
+                    });
+                }
             }
         }
     }
