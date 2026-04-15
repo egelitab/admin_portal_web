@@ -1,4 +1,106 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // 0. Authentication Logic
+    const API_BASE_URL = 'http://localhost:5000/api';
+    const loginOverlay = document.getElementById('login-overlay');
+    const loginForm = document.getElementById('admin-login-form');
+    const loginError = document.getElementById('login-error');
+
+    function checkAuth() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            loginOverlay.classList.add('show');
+            return false;
+        }
+        loginOverlay.classList.remove('show');
+        return true;
+    }
+
+    // Helper for authorized fetches
+    async function authFetch(url, options = {}) {
+        const token = localStorage.getItem('token');
+        const headers = {
+            'Content-Type': 'application/json',
+            ...options.headers,
+            'Authorization': `Bearer ${token}`
+        };
+
+        const response = await fetch(url, { ...options, headers });
+        if (response.status === 401) {
+            localStorage.removeItem('token');
+            checkAuth();
+            throw new Error('Unauthorized');
+        }
+        return response;
+    }
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    if (result.user.role !== 'admin') {
+                        loginError.textContent = 'Access restricted to administrators only.';
+                        loginError.style.display = 'block';
+                        return;
+                    }
+                    localStorage.setItem('token', result.accessToken);
+                    localStorage.setItem('adminUser', JSON.stringify(result.user));
+                    loginOverlay.classList.remove('show');
+                    // Refresh data
+                    initDashboard();
+                } else {
+                    loginError.textContent = result.message || 'Invalid email or password';
+                    loginError.style.display = 'block';
+                }
+            } catch (error) {
+                loginError.textContent = 'Server connection error';
+                loginError.style.display = 'block';
+            }
+        });
+    }
+
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('adminUser');
+            window.location.reload();
+        });
+    }
+
+    // Initial check
+    if (!checkAuth()) {
+        // Stop execution of other things if not logged in? 
+        // Or just let them fail and show overlay
+    }
+
+    function initDashboard() {
+        fetchUsers();
+        fetchDepartments();
+        fetchFaculties();
+        updateDashboardStats();
+        fetchLogs();
+    }
+
+    // Call init if authorized
+    if (localStorage.getItem('token')) {
+        initDashboard();
+        // Update admin name in UI
+        const adminData = JSON.parse(localStorage.getItem('adminUser') || '{}');
+        const adminNameElements = document.querySelectorAll('.admin-name');
+        adminNameElements.forEach(el => el.textContent = `${adminData.first_name} ${adminData.last_name}`);
+    }
+
     // 1. Navigation Logic
     const navItems = document.querySelectorAll('.nav-item');
     const viewSections = document.querySelectorAll('.view-section');
@@ -31,33 +133,44 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 2. Dashboard Stats Updater
-    function updateDashboardStats() {
-        // Dummy data for now
-        const stats = {
-            students: 4250,
-            instructors: 142,
-            courses: 95,
-            status: "Healthy"
-        };
+    async function updateDashboardStats() {
+        try {
+            const response = await authFetch(`${API_BASE_URL}/system/stats`);
+            const result = await response.json();
+            if (result.success) {
+                const stats = result.data;
+                const statValues = document.querySelectorAll('.stat-value');
+                if (statValues.length >= 4) {
+                    statValues[0].textContent = stats.totalUsers.toLocaleString();
+                    statValues[1].textContent = stats.activeSessions;
+                    // stats[2] is Disk storage in HTML, let's check index.html again
+                    // statValues[0] is Total Users
+                    // statValues[1] is Active Sessions
+                    // statValues[2] is actually handled by updateDiskStorage usually, but let's see
+                }
 
-        // Find elements and update them
-        const statValues = document.querySelectorAll('.stat-value');
-        if (statValues.length >= 4) {
-            statValues[0].textContent = stats.students.toLocaleString();
-            statValues[1].textContent = stats.instructors;
-            statValues[2].textContent = stats.courses;
-            statValues[3].textContent = stats.status;
-            statValues[3].className = 'stat-value';
+                // Update specific elements by ID if they exist
+                const totalUsersEl = document.querySelector('.stats-grid .stat-card:nth-child(1) .stat-value');
+                if (totalUsersEl) totalUsersEl.textContent = stats.totalUsers.toLocaleString();
+
+                const activeSessionsEl = document.querySelector('.stats-grid .stat-card:nth-child(2) .stat-value');
+                if (activeSessionsEl) activeSessionsEl.innerHTML = `${stats.activeSessions} <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">users online now</span>`;
+
+                // Update storage usage
+                updateDiskStorage(stats.storage);
+
+                // Update Sector breakdown chart
+                updateChartsWithData(stats.deptBreakdown);
+            }
+        } catch (error) {
+            console.error('Error updating stats:', error);
         }
     }
 
-    // Call immediately
-    updateDashboardStats();
-
     // Dynamic Disk Storage Updater
-    const updateDiskStorage = () => {
-        const USED_STORAGE_GB = 340; // You can change this dynamically
-        const TOTAL_STORAGE_GB = 500; // Constant
+    const updateDiskStorage = (data = null) => {
+        const USED_STORAGE_GB = data ? data.usedGB : 340;
+        const TOTAL_STORAGE_GB = data ? data.totalGB : 500;
 
         const percentage = Math.round((USED_STORAGE_GB / TOTAL_STORAGE_GB) * 100);
 
@@ -65,10 +178,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const diskProgressEl = document.getElementById('disk-progress');
         const diskTextEl = document.getElementById('disk-text');
 
+        // Update dashboard-wide if elements exist
         if (diskPercentageEl && diskProgressEl && diskTextEl) {
             diskPercentageEl.textContent = `${percentage}%`;
             diskProgressEl.style.width = `${percentage}%`;
             diskTextEl.textContent = `${USED_STORAGE_GB}GB / ${TOTAL_STORAGE_GB}GB Used`;
+        }
+
+        // Also update settings section stat card if it exists
+        const settingsStorageEl = document.querySelector('#settings .dashboard-grid:last-of-type .card span:last-child');
+        if (settingsStorageEl) {
+            settingsStorageEl.textContent = `${USED_STORAGE_GB} GB / ${TOTAL_STORAGE_GB} GB (${percentage}%)`;
+            const settingsBar = document.querySelector('#settings .dashboard-grid:last-of-type .card div:last-child div');
+            if (settingsBar) settingsBar.style.width = `${percentage}%`;
         }
     };
 
@@ -91,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchUsers() {
         try {
-            const response = await fetch('http://localhost:5000/api/users');
+            const response = await authFetch(`${API_BASE_URL}/users`);
             const result = await response.json();
             if (result.success) {
                 usersData = result.data.map(u => ({
@@ -116,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchDepartments() {
         try {
-            const response = await fetch('http://localhost:5000/api/departments');
+            const response = await authFetch(`${API_BASE_URL}/departments`);
             const result = await response.json();
             if (result.success) {
                 allDepartments = result.data;
@@ -130,21 +252,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
 
-                const facultyFilter = document.getElementById('faculty-filter');
-                if (facultyFilter) {
-                    // avoid duplicates by preserving the 'All' option
-                    facultyFilter.innerHTML = '<option value="all">All Faculties</option>';
-                    const uniqueFaculties = [...new Set(allDepartments.map(d => d.faculty_name).filter(Boolean))];
-                    uniqueFaculties.forEach(faculty => {
+                const courseDeptSelect = document.getElementById('course-dept');
+                if (courseDeptSelect) {
+                    const currentVal = courseDeptSelect.value;
+                    courseDeptSelect.innerHTML = '<option value="">Select Department...</option>';
+                    result.data.forEach(d => {
                         const opt = document.createElement('option');
-                        opt.value = faculty;
-                        opt.textContent = faculty;
-                        facultyFilter.appendChild(opt);
+                        opt.value = d.name;
+                        opt.textContent = d.name;
+                        courseDeptSelect.appendChild(opt);
                     });
-
-                    facultyFilter.addEventListener('change', renderDepartments);
+                    courseDeptSelect.value = currentVal;
                 }
-
                 renderDepartments();
             }
         } catch (error) {
@@ -207,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchFaculties() {
         try {
-            const response = await fetch('http://localhost:5000/api/departments/faculties');
+            const response = await authFetch(`${API_BASE_URL}/departments/faculties`);
             const result = await response.json();
             if (result.success) {
                 allFaculties = result.data;
@@ -227,10 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Initial load
-    fetchUsers();
-    fetchDepartments();
-    fetchFaculties();
+    // Initial load calls removed here, now in initDashboard()
 
     function renderUserTable() {
         if (!usersTableBody) return;
@@ -465,9 +581,8 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                const response = await fetch('http://localhost:5000/api/users', {
+                const response = await authFetch(`${API_BASE_URL}/users`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
@@ -501,7 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 for (const id of selectedIds) {
-                    await fetch(`http://localhost:5000/api/users/${id}`, { method: 'DELETE' });
+                    await authFetch(`${API_BASE_URL}/users/${id}`, { method: 'DELETE' });
                 }
                 alert("Selected users deleted successfully.");
 
@@ -525,9 +640,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 for (const id of selectedIds) {
-                    await fetch(`http://localhost:5000/api/users/${id}/status`, {
+                    await authFetch(`${API_BASE_URL}/users/${id}/status`, {
                         method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ is_active: false })
                     });
                 }
@@ -545,12 +659,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 1. Course Registration Logic ---
-    let courses = [
-        { code: 'CS101', name: 'Introduction to Programming', dept: 'Computer Science', credits: 3 },
-        { code: 'MATH201', name: 'Calculus II', dept: 'Mathematics', credits: 4 }
-    ];
-
+    let courses = [];
     const courseTableBody = document.getElementById('courses-table-body');
+
+    async function fetchCourses() {
+        try {
+            const response = await authFetch(`${API_BASE_URL}/courses`);
+            const result = await response.json();
+            if (result.success) {
+                courses = result.data;
+                renderCourses();
+            }
+        } catch (error) {
+            console.error('Error fetching courses:', error);
+        }
+    }
+
+    // Add fetchCourses to initDashboard
+    const oldInit = initDashboard;
+    initDashboard = function () {
+        oldInit();
+        fetchCourses();
+    };
 
     // Render courses to the table
     const renderCourses = () => {
@@ -559,18 +689,15 @@ document.addEventListener('DOMContentLoaded', () => {
         courses.forEach(course => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><strong>${course.code}</strong></td>
-                <td>${course.name}</td>
-                <td>${course.dept}</td>
-                <td>${course.credits}</td>
+                <td><strong>${course.course_code}</strong></td>
+                <td>${course.title}</td>
+                <td>${course.department_name || '-'}</td>
+                <td>${course.credits || 3}</td>
                 <td><button class="icon-btn edit"><span class="material-symbols-outlined">edit</span></button></td>
             `;
             courseTableBody.appendChild(tr);
         });
     };
-
-    // Initial Render
-    renderCourses();
 
     const courseForm = document.getElementById('course-form');
     // Error feedback element
@@ -582,94 +709,131 @@ document.addEventListener('DOMContentLoaded', () => {
     if (courseForm) courseForm.appendChild(courseErrorMsg);
 
     if (courseForm) {
-        courseForm.addEventListener('submit', (e) => {
+        courseForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const name = document.getElementById('course-name').value.trim();
-            const code = document.getElementById('course-code').value.trim().toUpperCase();
+            const title = document.getElementById('course-name').value.trim();
+            const course_code = document.getElementById('course-code').value.trim().toUpperCase();
             const credits = document.getElementById('course-credits').value;
-            const dept = document.getElementById('course-dept').value;
+            const deptName = document.getElementById('course-dept').value;
 
-            // --- 2. Form Validation ---
-            if (!name || !code || !credits || !dept) {
+            const foundDept = allDepartments.find(d => d.name === deptName);
+            const department_id = foundDept ? foundDept.id : null;
+
+            if (!title || !course_code || !department_id) {
                 courseErrorMsg.textContent = 'Please fill out all fields before submitting.';
                 courseErrorMsg.style.display = 'block';
                 return;
             }
 
-            courseErrorMsg.style.display = 'none';
+            try {
+                const response = await authFetch(`${API_BASE_URL}/courses`, {
+                    method: 'POST',
+                    body: JSON.stringify({ title, course_code, credits, department_id })
+                });
+                const result = await response.json();
 
-            // Add to array
-            courses.push({
-                code: code,
-                name: name,
-                dept: dept,
-                credits: parseInt(credits)
-            });
-
-            // Re-render and reset
-            renderCourses();
-            courseForm.reset();
-            alert('New course registered successfully!');
+                if (result.success) {
+                    alert('New course registered successfully!');
+                    courseForm.reset();
+                    fetchCourses();
+                } else {
+                    alert(`Failed to create course: ${result.message}`);
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
         });
     }
 
     // --- 3. Support Inbox Mockup ---
-    const tickets = [
-        { id: '#1045', user: 'a.smith@university.edu', subject: 'Forgot Password', status: 'Open', statusColor: '#fef3c7', textColor: '#d97706', date: 'Just Now' },
-        { id: '#1044', user: 'faculty.john@university.edu', subject: 'Cannot upload PDF to syllabus', status: 'Open', statusColor: '#fef3c7', textColor: '#d97706', date: '1 hr ago' },
-        { id: '#1043', user: 'm.lee@university.edu', subject: 'Course registration failing', status: 'In Progress', statusColor: '#e0f2fe', textColor: '#0369a1', date: '3 hrs ago' },
-        { id: '#1042', user: 'john.d@university.edu', subject: 'Cannot access CS101 materials', status: 'Resolved', statusColor: '#d1fae5', textColor: '#047857', date: 'Yesterday' },
-        { id: '#1041', user: 's.jenkins@university.edu', subject: 'Grade submission error', status: 'Resolved', statusColor: '#d1fae5', textColor: '#047857', date: 'Yesterday' }
-    ];
+    let tickets = [];
 
     const supportTableBody = document.getElementById('support-table-body');
+    async function fetchTickets() {
+        try {
+            // Note: If you add support tickets to backend, change this to authFetch
+            // For now, let's keep it as is or try to fetch from /api/system/tickets if you implement it
+            const response = await authFetch(`${API_BASE_URL}/system/tickets`).catch(() => null);
+            if (response && response.status === 200) {
+                const result = await response.json();
+                tickets = result.data;
+            } else {
+                // Fallback mockup
+                tickets = [
+                    { id: '#1045', user_email: 'a.smith@university.edu', subject: 'Forgot Password', status: 'Open', created_at: new Date() },
+                    { id: '#1044', user_email: 'faculty.john@university.edu', subject: 'Cannot upload PDF', status: 'Open', created_at: new Date() }
+                ];
+            }
+            renderSupportTickets();
+        } catch (error) {
+            renderSupportTickets(); // render default
+        }
+    }
+
     const renderSupportTickets = () => {
         if (!supportTableBody) return;
         supportTableBody.innerHTML = '';
         tickets.forEach(ticket => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><strong>${ticket.id}</strong></td>
-                <td>${ticket.user}</td>
+                <td><strong>${ticket.id.substring(0, 5)}</strong></td>
+                <td>${ticket.user_email || 'anonymous'}</td>
                 <td>${ticket.subject}</td>
-                <td><span class="badge" style="background: ${ticket.statusColor}; color: ${ticket.textColor};">${ticket.status}</span></td>
-                <td>${ticket.date}</td>
+                <td><span class="badge" style="background: #fef3c7; color: #d97706;">${ticket.status}</span></td>
+                <td>${timeAgo(new Date(ticket.created_at || new Date()))}</td>
                 <td><button class="btn btn-secondary btn-sm">View Ticket</button></td>
             `;
             supportTableBody.appendChild(tr);
         });
     }
 
-    renderSupportTickets();
+    // Add fetchTickets to initDashboard
+    const currentInit = initDashboard;
+    initDashboard = function () {
+        currentInit();
+        fetchTickets();
+    };
 
     // 6. Action Buttons
 
     const triggerManualBackupBtn = document.getElementById('trigger-manual-backup');
     const backupStatusMsg = document.getElementById('backup-status-msg');
     if (triggerManualBackupBtn && backupStatusMsg) {
-        triggerManualBackupBtn.addEventListener('click', () => {
+        triggerManualBackupBtn.addEventListener('click', async () => {
             const originalContent = triggerManualBackupBtn.innerHTML;
             triggerManualBackupBtn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">sync</span><span class="backup-text">Backing up database...</span>';
             triggerManualBackupBtn.disabled = true;
             backupStatusMsg.style.display = 'none';
 
-            setTimeout(() => {
+            try {
+                const response = await authFetch(`${API_BASE_URL}/system/backup`, { method: 'POST' });
+                const result = await response.json();
+
+                setTimeout(() => {
+                    triggerManualBackupBtn.innerHTML = originalContent;
+                    triggerManualBackupBtn.disabled = false;
+
+                    if (result.success) {
+                        backupStatusMsg.textContent = result.message;
+                        backupStatusMsg.style.color = '#10b981'; // Success color
+                    } else {
+                        backupStatusMsg.textContent = 'Error: ' + result.message;
+                        backupStatusMsg.style.color = '#ef4444';
+                    }
+                    backupStatusMsg.style.display = 'block';
+                }, 1500);
+            } catch (error) {
                 triggerManualBackupBtn.innerHTML = originalContent;
                 triggerManualBackupBtn.disabled = false;
-                backupStatusMsg.textContent = 'Success: Backup saved to /server/backups/db_backup.sql';
-                backupStatusMsg.style.color = '#10b981'; // Success color
+                backupStatusMsg.textContent = 'Network error during backup';
+                backupStatusMsg.style.color = '#ef4444';
                 backupStatusMsg.style.display = 'block';
-            }, 3000);
+            }
         });
     }
 
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            alert('Clearing session and logging out...');
-        });
-    }
+    // Duplicate logoutBtn removed (handled in Section 0)
 
     // 7. Chart Data Configurations
     const engagementCtx = document.getElementById('engagement-chart');
@@ -862,9 +1026,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const id = this.getAttribute('data-id');
                 const isActive = this.checked;
                 try {
-                    await fetch(`http://localhost:5000/api/users/${id}/status`, {
+                    await authFetch(`${API_BASE_URL}/users/${id}/status`, {
                         method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ is_active: isActive })
                     });
 
@@ -927,5 +1090,101 @@ document.addEventListener('DOMContentLoaded', () => {
             const checkedCheckbox = document.querySelector('.row-checkbox:checked');
             if (checkedCheckbox) openDrawerWithRowData(checkedCheckbox.closest('tr'));
         });
+    }
+
+    async function fetchLogs() {
+        try {
+            const response = await authFetch(`${API_BASE_URL}/system/logs`);
+            const result = await response.json();
+            if (result.success) {
+                renderActivityFeed(result.data);
+                renderLogsTable(result.data);
+            }
+        } catch (error) {
+            console.error('Error fetching logs:', error);
+        }
+    }
+
+    function renderActivityFeed(logs) {
+        const feedContainer = document.querySelector('.feed-list');
+        if (!feedContainer) return;
+
+        feedContainer.innerHTML = logs.map(log => `
+            <div class="feed-item">
+                <div class="feed-icon" style="background: rgba(48, 86, 211, 0.1); color: var(--primary);">
+                    <span class="material-symbols-outlined">${getIconForAction(log.action)}</span>
+                </div>
+                <div class="feed-content">
+                    <p><strong>${log.first_name || 'System'}</strong> ${formatAction(log.action)} ${log.entity_type || ''}</p>
+                    <span class="feed-time">${timeAgo(new Date(log.created_at))}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderLogsTable(logs) {
+        const logsTableBody = document.getElementById('logs-table-body');
+        if (!logsTableBody) return;
+
+        logsTableBody.innerHTML = logs.map(log => `
+            <tr>
+                <td class="text-muted">${new Date(log.created_at).toLocaleString()}</td>
+                <td>${log.email || 'system'}</td>
+                <td><span class="badge" style="background: #e0f2fe; color: #0369a1;">${log.action}</span></td>
+                <td class="text-muted">${log.ip_address || 'N/A'}</td>
+                <td>${log.action} on ${log.entity_type || 'system'}</td>
+            </tr>
+        `).join('');
+    }
+
+    function updateChartsWithData(deptBreakdown) {
+        if (!pieCtx || !deptBreakdown) return;
+
+        // Find existing chart instance or create new
+        const chart = Chart.getChart(pieCtx);
+        if (chart) {
+            chart.data.labels = deptBreakdown.map(d => d.name);
+            chart.data.datasets[0].data = deptBreakdown.map(d => d.count);
+            chart.update();
+
+            // Update custom legend
+            const legendContainer = document.querySelector('.donut-legend');
+            if (legendContainer) {
+                const total = deptBreakdown.reduce((sum, d) => sum + d.count, 0);
+                legendContainer.innerHTML = deptBreakdown.map((d, i) => `
+                    <div class="legend-item">
+                        <span class="dot" style="background: ${chart.data.datasets[0].backgroundColor[i % 5]};"></span>
+                        ${d.name} (${Math.round((d.count / total) * 100)}%)
+                    </div>
+                `).join('');
+            }
+        }
+    }
+
+    function getIconForAction(action) {
+        if (action.includes('LOGIN')) return 'login';
+        if (action.includes('CREATE')) return 'add_circle';
+        if (action.includes('UPDATE')) return 'edit';
+        if (action.includes('DELETE')) return 'delete';
+        return 'history';
+    }
+
+    function formatAction(action) {
+        return action.toLowerCase().replace(/_/g, ' ');
+    }
+
+    function timeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + " years ago";
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + " months ago";
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + " days ago";
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + " hours ago";
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + " minutes ago";
+        return Math.floor(seconds) + " seconds ago";
     }
 });
