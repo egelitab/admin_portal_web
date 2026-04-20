@@ -829,6 +829,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const chaptersList = document.getElementById('chapters-list');
     let activeCourseId = null;
 
+    // Helper to convert number to words for chapters
+    function numberToWord(n) {
+        const words = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+            'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen', 'Twenty'];
+        return words[n] || n.toString();
+    }
+
     async function openEditCourseModal(course) {
         activeCourseId = course.id;
         editCourseTitle.textContent = `Edit Details: ${course.title}`;
@@ -843,6 +850,11 @@ document.addEventListener('DOMContentLoaded', () => {
             statusEl.textContent = 'No guide uploaded yet.';
         }
 
+        const chooseBtnText = document.getElementById('choose-btn-text');
+        const saveBtn = document.getElementById('save-course-details-btn');
+        if (chooseBtnText) chooseBtnText.textContent = 'Select Course Guide (PDF)';
+        if (saveBtn) saveBtn.disabled = true;
+
         fetchChapters();
         editCourseModal.classList.add('show');
     }
@@ -854,74 +866,126 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await res.json();
             if (result.success) {
                 chaptersList.innerHTML = result.data.length ? result.data.map(ch => `
-                    <div style="padding: 12px 15px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: 500;">${ch.title}</span>
-                        <span class="text-muted" style="font-size: 0.75rem;">Chapter ${ch.order_index + 1}</span>
+                    <div style="padding: 10px 15px; background: white; border: 1px solid var(--border); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-dark);">${ch.title}</span>
+                        <span class="text-muted" style="font-size: 0.7rem; background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">Chapter ${ch.order_index + 1}</span>
                     </div>
-                `).join('') : '<p class="text-muted" style="text-align: center; padding: 20px;">No chapters added yet.</p>';
+                `).join('') : '<p class="text-muted" style="text-align: center; padding: 20px; font-size: 0.85rem;">No chapters added yet.</p>';
+
+                const label = document.getElementById('chapter-number-label');
+                if (label) {
+                    label.textContent = `Chapter ${numberToWord(result.data.length + 1)}:`;
+                }
+                updateSaveBtnState();
             }
         } catch (e) { console.error(e); }
     }
 
+    function updateSaveBtnState() {
+        const saveBtn = document.getElementById('save-course-details-btn');
+        const fileInput = document.getElementById('guide-file-input');
+        const hasFile = fileInput && fileInput.files.length > 0;
+        const hasChapters = chaptersList && chaptersList.children.length > 0 && !chaptersList.querySelector('p.text-muted');
+
+        if (saveBtn) saveBtn.disabled = !(hasFile || hasChapters);
+    }
+
     if (closeEditCourseModal) closeEditCourseModal.addEventListener('click', () => editCourseModal.classList.remove('show'));
 
-    // Tab Switching
-    document.querySelectorAll('.tab-btn-mini').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn-mini, .tab-content-mini').forEach(el => el.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById(btn.dataset.tab).classList.add('active');
-        });
-    });
+    const chooseGuideBtn = document.getElementById('choose-guide-btn');
+    const guideFileInput = document.getElementById('guide-file-input');
+    const saveCourseDetailsBtn = document.getElementById('save-course-details-btn');
 
-    if (uploadGuideForm) {
-        uploadGuideForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const fileInput = document.getElementById('guide-file-input');
-            if (fileInput.files.length === 0) return;
-
-            const formData = new FormData();
-            formData.append('guide', fileInput.files[0]);
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/courses/${activeCourseId}/guide`, {
-                    method: 'PUT',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-                    body: formData
-                });
-                const result = await res.json();
-                if (result.success) {
-                    alert('Guide uploaded successfully!');
-                    fetchCourses();
-                    editCourseModal.classList.remove('show');
-                } else { alert(result.message); }
-            } catch (err) { alert('Upload failed'); }
+    if (chooseGuideBtn) chooseGuideBtn.addEventListener('click', () => guideFileInput.click());
+    if (guideFileInput) {
+        guideFileInput.addEventListener('change', () => {
+            const btnText = document.getElementById('choose-btn-text');
+            if (guideFileInput.files.length > 0) {
+                const fileName = guideFileInput.files[0].name;
+                if (btnText) btnText.textContent = fileName.length > 20 ? fileName.substring(0, 17) + '...' : fileName;
+            } else {
+                if (btnText) btnText.textContent = 'Select Course Guide (PDF)';
+            }
+            updateSaveBtnState();
         });
     }
 
-    if (addChapterForm) {
-        addChapterForm.addEventListener('submit', async (e) => {
+    if (saveCourseDetailsBtn) {
+        saveCourseDetailsBtn.addEventListener('click', async () => {
+            const fileInput = document.getElementById('guide-file-input');
+            const hasFile = fileInput && fileInput.files.length > 0;
+
+            saveCourseDetailsBtn.disabled = true;
+            saveCourseDetailsBtn.textContent = 'Saving...';
+
+            try {
+                if (hasFile) {
+                    const formData = new FormData();
+                    formData.append('guide', fileInput.files[0]);
+
+                    const res = await fetch(`${API_BASE_URL}/courses/${activeCourseId}/guide`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                        body: formData
+                    });
+                    const result = await res.json();
+                    if (!result.success) {
+                        alert('Guide upload failed: ' + result.message);
+                        saveCourseDetailsBtn.disabled = false;
+                        saveCourseDetailsBtn.textContent = 'Save Changes';
+                        return;
+                    }
+                }
+
+                alert('Changes saved successfully!');
+                fetchCourses();
+                editCourseModal.classList.remove('show');
+            } catch (err) {
+                console.error(err);
+                alert('Operation failed');
+            } finally {
+                saveCourseDetailsBtn.textContent = 'Save Changes';
+                updateSaveBtnState();
+            }
+        });
+    }
+
+    // Robust event delegation for chapter addition
+    document.addEventListener('submit', async (e) => {
+        if (e.target && e.target.id === 'add-chapter-form') {
             e.preventDefault();
-            const titleInput = document.getElementById('chapter-title-input');
-            const title = titleInput.value.trim();
+            const form = e.target;
+            const titleInput = form.querySelector('#chapter-title-input');
+            const title = titleInput ? titleInput.value.trim() : '';
             if (!title) return;
 
-            const currentChapters = chaptersList.querySelectorAll('div[style*="padding: 12px 15px"]').length;
-            const order_index = currentChapters;
+            if (!activeCourseId) {
+                alert("Session lost. Please close and reopen the modal.");
+                return;
+            }
+
+            // Count existing chapters accurately
+            const existingCount = chaptersList.querySelectorAll(':scope > div').length;
 
             try {
                 const res = await authFetch(`${API_BASE_URL}/courses/${activeCourseId}/chapters`, {
                     method: 'POST',
-                    body: JSON.stringify({ title, order_index })
+                    body: JSON.stringify({ title, order_index: existingCount })
                 });
                 const result = await res.json();
                 if (result.success) {
                     titleInput.value = '';
+                    titleInput.focus();
                     fetchChapters();
+                } else {
+                    alert('Error: ' + result.message);
                 }
-            } catch (err) { console.error(err); }
-        });
-    }
+            } catch (err) {
+                console.error(err);
+                alert('Connection failed while adding chapter');
+            }
+        }
+    });
 
     if (coursesTableBody) {
         coursesTableBody.addEventListener('click', (e) => {
