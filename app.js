@@ -819,6 +819,122 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     }
 
+    // --- Course Detail Editing (Guide & Chapters) ---
+    const editCourseModal = document.getElementById('edit-course-modal');
+    const editCourseTitle = document.getElementById('edit-course-title');
+    const editCourseCode = document.getElementById('edit-course-code');
+    const closeEditCourseModal = document.querySelector('.close-edit-course-modal');
+    const uploadGuideForm = document.getElementById('upload-guide-form');
+    const addChapterForm = document.getElementById('add-chapter-form');
+    const chaptersList = document.getElementById('chapters-list');
+    let activeCourseId = null;
+
+    async function openEditCourseModal(course) {
+        activeCourseId = course.id;
+        editCourseTitle.textContent = `Edit Details: ${course.title}`;
+        editCourseCode.textContent = `Course Code: ${course.course_code}`;
+
+        // Update Guide Status
+        const statusEl = document.getElementById('current-guide-status');
+        if (course.course_guide_url) {
+            statusEl.innerHTML = `<span style="color: #10b981; display: flex; align-items: center; gap: 5px;"><span class="material-symbols-outlined">check_circle</span> Guide Uploaded</span>
+                                  <a href="${API_BASE_URL.replace('/api', '')}${course.course_guide_url}" target="_blank" style="font-size: 0.8rem; margin-top: 5px; display: block; color: var(--primary);">View Current PDF</a>`;
+        } else {
+            statusEl.textContent = 'No guide uploaded yet.';
+        }
+
+        fetchChapters();
+        editCourseModal.classList.add('show');
+    }
+
+    async function fetchChapters() {
+        if (!activeCourseId) return;
+        try {
+            const res = await authFetch(`${API_BASE_URL}/courses/${activeCourseId}/chapters`);
+            const result = await res.json();
+            if (result.success) {
+                chaptersList.innerHTML = result.data.length ? result.data.map(ch => `
+                    <div style="padding: 12px 15px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 500;">${ch.title}</span>
+                        <span class="text-muted" style="font-size: 0.75rem;">Chapter ${ch.order_index + 1}</span>
+                    </div>
+                `).join('') : '<p class="text-muted" style="text-align: center; padding: 20px;">No chapters added yet.</p>';
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    if (closeEditCourseModal) closeEditCourseModal.addEventListener('click', () => editCourseModal.classList.remove('show'));
+
+    // Tab Switching
+    document.querySelectorAll('.tab-btn-mini').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn-mini, .tab-content-mini').forEach(el => el.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    if (uploadGuideForm) {
+        uploadGuideForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('guide-file-input');
+            if (fileInput.files.length === 0) return;
+
+            const formData = new FormData();
+            formData.append('guide', fileInput.files[0]);
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/courses/${activeCourseId}/guide`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: formData
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('Guide uploaded successfully!');
+                    fetchCourses();
+                    editCourseModal.classList.remove('show');
+                } else { alert(result.message); }
+            } catch (err) { alert('Upload failed'); }
+        });
+    }
+
+    if (addChapterForm) {
+        addChapterForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const titleInput = document.getElementById('chapter-title-input');
+            const title = titleInput.value.trim();
+            if (!title) return;
+
+            const currentChapters = chaptersList.querySelectorAll('div[style*="padding: 12px 15px"]').length;
+            const order_index = currentChapters;
+
+            try {
+                const res = await authFetch(`${API_BASE_URL}/courses/${activeCourseId}/chapters`, {
+                    method: 'POST',
+                    body: JSON.stringify({ title, order_index })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    titleInput.value = '';
+                    fetchChapters();
+                }
+            } catch (err) { console.error(err); }
+        });
+    }
+
+    if (coursesTableBody) {
+        coursesTableBody.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.edit');
+            if (editBtn) {
+                const tr = editBtn.closest('tr');
+                const trs = Array.from(coursesTableBody.querySelectorAll('tr'));
+                const index = trs.indexOf(tr);
+                if (coursesData[index]) openEditCourseModal(coursesData[index]);
+            }
+        });
+    }
+
     async function populateCourseFilterDropdowns() {
         try {
             const instRes = await authFetch(`${API_BASE_URL}/departments/institutions`);

@@ -602,6 +602,101 @@
                     </div>
                 </div>
 
+                <!-- Edit Course Details Modal (Guide & Chapters) -->
+                <div id="edit-course-modal" class="modal">
+                    <div class="modal-content" style="max-width: 600px;">
+                        <div class="modal-header">
+                            <div>
+                                <h2 id="edit-course-title">Edit Course Details</h2>
+                                <p id="edit-course-code" class="text-muted" style="margin: 0; font-size: 0.85rem;"></p>
+                            </div>
+                            <span class="close-edit-course-modal"
+                                style="font-size: 24px; cursor: pointer;">&times;</span>
+                        </div>
+                        <div class="modal-body" style="padding: 20px 30px;">
+                            <div class="tabs-minimal"
+                                style="display: flex; gap: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px;">
+                                <style>
+                                    .tab-btn-mini {
+                                        background: none;
+                                        border: none;
+                                        padding: 10px 5px;
+                                        color: var(--text-muted);
+                                        cursor: pointer;
+                                        font-weight: 500;
+                                        font-size: 0.9rem;
+                                        position: relative;
+                                    }
+
+                                    .tab-btn-mini.active {
+                                        color: var(--primary);
+                                    }
+
+                                    .tab-btn-mini.active::after {
+                                        content: '';
+                                        position: absolute;
+                                        bottom: -1px;
+                                        left: 0;
+                                        width: 100%;
+                                        height: 2px;
+                                        background: var(--primary);
+                                    }
+
+                                    .tab-content-mini {
+                                        display: none;
+                                        margin-top: 10px;
+                                    }
+
+                                    .tab-content-mini.active {
+                                        display: block;
+                                    }
+                                </style>
+                                <button class="tab-btn-mini active" data-tab="guide-tab">Course Guide</button>
+                                <button class="tab-btn-mini" data-tab="chapters-tab">Chapters</button>
+                            </div>
+
+                            <!-- Guide Tab -->
+                            <div id="guide-tab" class="tab-content-mini active">
+                                <form id="upload-guide-form">
+                                    <div class="form-group">
+                                        <label>Current Guide</label>
+                                        <div id="current-guide-status"
+                                            style="padding: 10px; background: #f8fafc; border-radius: 8px; font-size: 0.9rem; margin-bottom: 15px;">
+                                            No guide uploaded yet.
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="guide-file-input">Upload New Guide (PDF)</label>
+                                        <input type="file" id="guide-file-input" accept="application/pdf" required
+                                            style="padding: 10px; border: 1px dashed var(--border); width: 100%; border-radius: 8px;">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary" style="width: 100%;">Upload
+                                        Guide</button>
+                                </form>
+                            </div>
+
+                            <!-- Chapters Tab -->
+                            <div id="chapters-tab" class="tab-content-mini">
+                                <div id="chapters-list"
+                                    style="margin-bottom: 20px; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                                    <!-- Populated dynamically -->
+                                </div>
+                                <form id="add-chapter-form"
+                                    style="border-top: 1px solid var(--border); padding-top: 20px;">
+                                    <div class="form-group">
+                                        <label for="chapter-title-input">Add New Chapter</label>
+                                        <div style="display: flex; gap: 10px;">
+                                            <input type="text" id="chapter-title-input" placeholder="Chapter Title..."
+                                                required style="flex: 1;">
+                                            <button type="submit" class="btn btn-primary btn-sm">Add</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Logs Section -->
                 <section id="logs" class="view-section">
                     <div class="section-header">
