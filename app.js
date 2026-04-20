@@ -783,6 +783,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (courseDeptFilter && courseDeptFilter.value !== 'all') params.append('department_id', courseDeptFilter.value);
             if (courseYearFilter && courseYearFilter.value !== 'all') params.append('year', courseYearFilter.value);
             if (courseSemFilter && courseSemFilter.value !== 'all') params.append('semester', courseSemFilter.value);
+            const sortFilter = document.getElementById('course-sort-filter');
+            if (sortFilter) params.append('sort', sortFilter.value);
             if (courseSearch && courseSearch.value) params.append('search', courseSearch.value);
 
             const response = await authFetch(`${API_BASE_URL}/courses?${params.toString()}`);
@@ -811,8 +813,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
                 <td><span class="text-muted">Yr ${course.year || 'N/A'}, Sem ${course.semester || 'N/A'}</span></td>
                 <td style="text-align: center;">
-                    <button class="icon-btn" title="Edit Course"><span class="material-symbols-outlined" style="font-size: 1.2rem;">edit_note</span></button>
-                    <button class="icon-btn delete" title="Remove" style="color: #ef4444;"><span class="material-symbols-outlined" style="font-size: 1.2rem;">delete_sweep</span></button>
+                    <button class="icon-btn edit" title="Edit Course"><span class="material-symbols-outlined" style="font-size: 1.2rem;">edit_note</span></button>
                 </td>
             </tr>
         `).join('');
@@ -845,20 +846,69 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const deptSelect = document.getElementById('course-dept-input');
             const instructorSelect = document.getElementById('course-instructor-input');
+
+            // Departments
             const deptRes = await authFetch(`${API_BASE_URL}/departments`);
             const deptData = await deptRes.json();
             if (deptData.success && deptSelect) {
-                deptSelect.innerHTML = '<option value="">Select Department...</option>' +
+                deptSelect.innerHTML = '<option value="" disabled selected hidden>Select Department...</option>' +
                     deptData.data.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+                setupSearchableSelect('dept-search-container');
             }
+
+            // Instructors
             const userRes = await authFetch(`${API_BASE_URL}/users`);
             const userData = await userRes.json();
             if (userData.success && instructorSelect) {
                 const instructors = userData.data.filter(u => u.role === 'instructor');
-                instructorSelect.innerHTML = '<option value="">Select Instructor...</option>' +
+                instructorSelect.innerHTML = '<option value="" disabled selected hidden>Select Instructor...</option>' +
                     instructors.map(i => `<option value="${i.id}">${i.first_name} ${i.last_name}</option>`).join('');
+                setupSearchableSelect('instructor-search-container');
             }
         } catch (e) { console.error(e); }
+    }
+
+    function setupSearchableSelect(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const input = container.querySelector('.searchable-select-input');
+        const dropdown = container.querySelector('.searchable-select-dropdown');
+        const select = container.querySelector('select');
+
+        // Clear existing dropdown items
+        dropdown.innerHTML = '';
+
+        const options = Array.from(select.options).filter(opt => !opt.disabled);
+
+        const renderDropdown = (filter = '') => {
+            const filtered = options.filter(opt => opt.text.toLowerCase().includes(filter.toLowerCase()));
+            dropdown.innerHTML = filtered.length ? filtered.map(opt => `
+                <div class="searchable-select-option" data-value="${opt.value}">${opt.text}</div>
+            `).join('') : '<div class="searchable-select-no-results">No matches found</div>';
+
+            dropdown.classList.add('show');
+        };
+
+        // Event Listeners
+        input.addEventListener('focus', () => renderDropdown(input.value));
+        input.addEventListener('input', () => renderDropdown(input.value));
+
+        dropdown.addEventListener('click', (e) => {
+            const option = e.target.closest('.searchable-select-option');
+            if (option) {
+                const val = option.getAttribute('data-value');
+                const text = option.textContent;
+                input.value = text;
+                select.value = val;
+                dropdown.classList.remove('show');
+                select.dispatchEvent(new Event('change'));
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!container.contains(e.target)) dropdown.classList.remove('show');
+        });
     }
 
     // Modal & Filter Event Listeners
@@ -876,7 +926,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => createCourseModal.classList.remove('show'));
     });
 
-    [courseInstFilter, courseFacultyFilter, courseDeptFilter, courseYearFilter, courseSemFilter].forEach(el => {
+    const courseSortFilter = document.getElementById('course-sort-filter');
+    [courseInstFilter, courseFacultyFilter, courseDeptFilter, courseYearFilter, courseSemFilter, courseSortFilter].forEach(el => {
         if (el) el.addEventListener('change', fetchCourses);
     });
     if (courseSearch) courseSearch.addEventListener('input', fetchCourses);
@@ -887,6 +938,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (courseDeptFilter) courseDeptFilter.value = 'all';
             if (courseYearFilter) courseYearFilter.value = 'all';
             if (courseSemFilter) courseSemFilter.value = 'all';
+            if (courseSortFilter) courseSortFilter.value = 'newest';
             if (courseSearch) courseSearch.value = '';
             fetchCourses();
         });

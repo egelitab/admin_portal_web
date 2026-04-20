@@ -482,6 +482,16 @@
                                     <option value="2">Semester 2</option>
                                 </select>
                             </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label
+                                    style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; display: block;">Sort
+                                    By</label>
+                                <select id="course-sort-filter" class="filter-dropdown" style="width: 100%;">
+                                    <option value="newest">Newest First</option>
+                                    <option value="code">Course Code</option>
+                                    <option value="title">Course Title</option>
+                                </select>
+                            </div>
                         </div>
                         <div style="margin-top: 15px; display: flex; gap: 15px; align-items: center;">
                             <div class="search-box" style="flex: 1; position: relative;">
@@ -542,15 +552,25 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="course-dept-input">Department</label>
-                                        <select id="course-dept-input" required>
-                                            <option value="">Select Department...</option>
-                                        </select>
+                                        <div class="searchable-select-container" id="dept-search-container">
+                                            <input type="text" class="searchable-select-input"
+                                                placeholder="Select Department..." autocomplete="off">
+                                            <div class="searchable-select-dropdown"></div>
+                                            <select id="course-dept-input" required style="display: none;">
+                                                <option value="" disabled selected hidden>Select Department...</option>
+                                            </select>
+                                        </div>
                                     </div>
                                     <div class="form-group">
                                         <label for="course-instructor-input">Instructor</label>
-                                        <select id="course-instructor-input" required>
-                                            <option value="">Select Instructor...</option>
-                                        </select>
+                                        <div class="searchable-select-container" id="instructor-search-container">
+                                            <input type="text" class="searchable-select-input"
+                                                placeholder="Select Instructor..." autocomplete="off">
+                                            <div class="searchable-select-dropdown"></div>
+                                            <select id="course-instructor-input" required style="display: none;">
+                                                <option value="" disabled selected hidden>Select Instructor...</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="form-row">
