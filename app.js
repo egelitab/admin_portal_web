@@ -120,11 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const title = item.querySelector('span:nth-child(2)').textContent;
             headerTitle.textContent = title;
 
-            const breadcrumbEl = document.getElementById('breadcrumb');
-            if (breadcrumbEl) {
-                breadcrumbEl.textContent = title === 'Dashboard' ? 'Dashboard' : `Dashboard / ${title}`;
-            }
-
             const createUserBtn = document.getElementById('open-create-user-modal');
             if (createUserBtn) {
                 createUserBtn.style.display = target === 'users' ? 'flex' : 'none';

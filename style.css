@@ -193,7 +193,7 @@ body {
 }
 
 .top-header {
-    height: 95px;
+    height: 60px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -201,10 +201,9 @@ body {
 }
 
 #section-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    color: #1A202C;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-muted);
     margin: 0;
     line-height: 1;
     display: flex;
@@ -270,7 +269,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 15px;
 }
 
 .section-header h2 {
@@ -359,7 +358,7 @@ body {
 }
 
 #dashboard .dashboard-grid:first-of-type {
-    margin-top: 30px;
+    margin-top: 15px;
 }
 
 
