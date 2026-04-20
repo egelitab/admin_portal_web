@@ -14,6 +14,25 @@
     --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.03);
 
     --transition: all 0.3s ease;
+    /* Typography Tokens */
+    --text-xs: 0.75rem;
+    /* 12px */
+    --text-sm: 0.875rem;
+    /* 14px */
+    --text-base: 1rem;
+    /* 16px */
+    --text-lg: 1.125rem;
+    /* 18px */
+    --text-xl: 1.25rem;
+    /* 20px */
+    --text-2xl: 1.5rem;
+    /* 24px */
+    --text-3xl: 1.875rem;
+    /* 30px */
+    --text-4xl: 2.25rem;
+    /* 36px */
+    --text-5xl: 3rem;
+    /* 48px */
 }
 
 * {
@@ -25,6 +44,7 @@
 
 body {
     font-family: 'Inter', sans-serif;
+    font-size: var(--text-base);
     background-color: var(--primary);
     color: var(--text-dark);
     min-height: 100vh;
@@ -57,12 +77,12 @@ body {
 }
 
 .sidebar-header h2 {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 700;
 }
 
 .logo-icon {
-    font-size: 28px;
+    font-size: var(--text-3xl);
 }
 
 .sidebar nav {
@@ -141,7 +161,7 @@ body {
 }
 
 .nav-item span.material-symbols-outlined {
-    font-size: 22px;
+    font-size: var(--text-2xl);
 }
 
 .sidebar-footer {
@@ -163,7 +183,7 @@ body {
     border-radius: 15px;
     cursor: pointer;
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: var(--text-base);
     transition: var(--transition);
 }
 
@@ -201,7 +221,7 @@ body {
 }
 
 #section-title {
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     font-weight: 500;
     color: var(--text-muted);
     margin: 0;
@@ -229,7 +249,7 @@ body {
 
 .admin-name {
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: var(--text-base);
 }
 
 .avatar {
@@ -273,7 +293,7 @@ body {
 }
 
 .section-header h2 {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     color: var(--text-dark);
 }
 
@@ -331,14 +351,14 @@ body {
 
 .stat-info h3,
 .stat-card h3 {
-    font-size: 14px !important;
+    font-size: var(--text-sm) !important;
     color: #718096 !important;
     font-weight: 500 !important;
     margin-bottom: 5px;
 }
 
 .stat-value {
-    font-size: 1.6rem;
+    font-size: var(--text-3xl);
     font-weight: 700;
     color: var(--text-dark);
 }
@@ -380,7 +400,7 @@ body {
 }
 
 .card-header h3 {
-    font-size: 1.1rem;
+    font-size: var(--text-lg);
     font-weight: 600;
 }
 
@@ -397,7 +417,7 @@ body {
     background: transparent;
     padding: 6px 16px;
     border-radius: 20px;
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     font-weight: 600;
     color: var(--text-muted);
     cursor: pointer;
@@ -419,7 +439,7 @@ body {
     padding: 12px 24px;
     border-radius: 12px;
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: var(--text-base);
     cursor: pointer;
     border: none;
     transition: var(--transition);
@@ -451,7 +471,7 @@ body {
 
 .btn-sm {
     padding: 8px 16px;
-    font-size: 0.85rem;
+    font-size: var(--text-sm);
 }
 
 /* Tables (The Airy Look) */
@@ -490,7 +510,7 @@ body {
 .data-table th {
     color: var(--text-muted);
     font-weight: 600;
-    font-size: 12px;
+    font-size: var(--text-xs);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     background: transparent;
@@ -629,7 +649,7 @@ body {
 .badge {
     padding: 4px 12px;
     border-radius: 50px;
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     font-weight: 600;
     display: inline-flex;
     align-items: center;
@@ -655,7 +675,7 @@ body {
 .status-active,
 .status-suspended,
 .status-pending {
-    font-size: 0.7rem;
+    font-size: var(--text-xs);
 }
 
 .status-active {
@@ -714,7 +734,7 @@ body {
     background-position: right 12px center;
     background-size: 16px;
     font-family: inherit;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     color: var(--text-dark);
 }
 
@@ -749,7 +769,7 @@ body {
 
 .action-text h4,
 .add-shortcut-text {
-    font-size: 10px;
+    font-size: var(--text-xs);
     margin: 0;
     font-weight: 600;
 }
@@ -806,13 +826,13 @@ body {
 }
 
 .action-text h4 {
-    font-size: 0.95rem;
+    font-size: var(--text-base);
     font-weight: 600;
     margin-bottom: 2px;
 }
 
 .action-text p {
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--text-muted);
 }
 
@@ -883,7 +903,7 @@ body {
 }
 
 .drawer-profile-info h3 {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     margin-bottom: 5px;
 }
 
@@ -902,7 +922,7 @@ body {
 }
 
 .detail-group label {
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--text-muted);
     font-weight: 600;
     text-transform: uppercase;
@@ -911,7 +931,7 @@ body {
 }
 
 .detail-group p {
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 500;
     color: var(--text-dark);
 }
@@ -970,11 +990,11 @@ body {
 }
 
 .dept-icon-small .material-symbols-outlined {
-    font-size: 24px;
+    font-size: var(--text-2xl);
 }
 
 .dept-name {
-    font-size: 1.15rem;
+    font-size: var(--text-lg);
     font-weight: 600;
     color: var(--text-dark);
     margin: 0;
@@ -1020,7 +1040,7 @@ body {
 }
 
 .stat-label {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     text-transform: uppercase;
     color: var(--text-muted);
     font-weight: 600;
@@ -1029,7 +1049,7 @@ body {
 }
 
 .stat-num {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 700;
     color: var(--primary);
 }
@@ -1070,13 +1090,13 @@ body {
 }
 
 .modal-header h2 {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
 }
 
 .close-modal,
 .close-profile-modal {
-    font-size: 24px;
+    font-size: var(--text-2xl);
     cursor: pointer;
     color: var(--text-muted);
     transition: var(--transition);
@@ -1108,7 +1128,7 @@ body {
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
 }
 
 .form-group input,
@@ -1162,7 +1182,7 @@ select option {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--text-dark);
     margin-bottom: 6px;
     font-weight: 500;
@@ -1197,16 +1217,16 @@ select option {
 }
 
 .feed-icon span {
-    font-size: 20px;
+    font-size: var(--text-xl);
 }
 
 .feed-content p {
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     margin-bottom: 4px;
 }
 
 .feed-time {
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--text-muted);
 }
 
@@ -1351,7 +1371,7 @@ input:checked+.slider:before {
     }
 
     .sidebar-footer button .material-symbols-outlined {
-        font-size: 24px;
+        font-size: var(--text-2xl);
         margin: 0;
     }
 
@@ -1427,25 +1447,25 @@ input:checked+.slider:before {
 }
 
 .login-header .logo-icon {
-    font-size: 3rem;
+    font-size: var(--text-5xl);
     color: var(--primary);
     margin-bottom: 1rem;
 }
 
 .login-header h2 {
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--text-dark);
 }
 
 .login-header p {
     color: var(--text-muted);
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
 }
 
 .error-msg {
     color: #ef4444;
-    font-size: 0.85rem;
+    font-size: var(--text-sm);
     text-align: center;
     margin-top: 10px;
     background: #fef2f2;
@@ -1497,7 +1517,7 @@ input:checked+.slider:before {
 .searchable-select-option {
     padding: 10px 15px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     transition: background 0.2s;
 }
 
@@ -1514,6 +1534,6 @@ input:checked+.slider:before {
 .searchable-select-no-results {
     padding: 10px 15px;
     color: var(--text-muted);
-    font-size: 0.85rem;
+    font-size: var(--text-sm);
     text-align: center;
 }
