@@ -751,16 +751,44 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 1. Course Registration Logic ---
-    let courses = [];
-    const courseTableBody = document.getElementById('courses-table-body');
+    // --- 4. Course Catalog Management Logic ---
+    let coursesData = [];
+    const coursesTableBody = document.getElementById('courses-table-body');
+    const courseSearch = document.getElementById('course-search');
+    const createCourseForm = document.getElementById('create-course-form');
+    const createCourseModal = document.getElementById('create-course-modal');
+
+    // Filter selectors
+    const courseInstFilter = document.getElementById('course-institution-filter');
+    const courseFacultyFilter = document.getElementById('course-faculty-filter');
+    const courseDeptFilter = document.getElementById('course-dept-filter');
+    const courseYearFilter = document.getElementById('course-year-filter');
+    const courseSemFilter = document.getElementById('course-semester-filter');
+    const resetCoursesBtn = document.getElementById('reset-course-filters');
+
+    async function initCoursesSection() {
+        await Promise.all([
+            fetchCourses(),
+            populateCourseFilterDropdowns(),
+            populateCreateCourseDropdowns()
+        ]);
+    }
 
     async function fetchCourses() {
+        if (!coursesTableBody) return;
         try {
-            const response = await authFetch(`${API_BASE_URL}/courses`);
+            const params = new URLSearchParams();
+            if (courseInstFilter && courseInstFilter.value !== 'all') params.append('institution_id', courseInstFilter.value);
+            if (courseFacultyFilter && courseFacultyFilter.value !== 'all') params.append('faculty_id', courseFacultyFilter.value);
+            if (courseDeptFilter && courseDeptFilter.value !== 'all') params.append('department_id', courseDeptFilter.value);
+            if (courseYearFilter && courseYearFilter.value !== 'all') params.append('year', courseYearFilter.value);
+            if (courseSemFilter && courseSemFilter.value !== 'all') params.append('semester', courseSemFilter.value);
+            if (courseSearch && courseSearch.value) params.append('search', courseSearch.value);
+
+            const response = await authFetch(`${API_BASE_URL}/courses?${params.toString()}`);
             const result = await response.json();
             if (result.success) {
-                courses = result.data;
+                coursesData = result.data;
                 renderCourses();
             }
         } catch (error) {
@@ -768,75 +796,140 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Add fetchCourses to initDashboard
-    const oldInit = initDashboard;
-    initDashboard = function () {
-        oldInit();
-        fetchCourses();
-    };
+    function renderCourses() {
+        if (!coursesTableBody) return;
+        coursesTableBody.innerHTML = (coursesData || []).map(course => `
+            <tr>
+                <td><strong style="color: var(--primary);">${course.course_code}</strong></td>
+                <td><span style="font-weight: 600;">${course.title}</span></td>
+                <td class="text-muted"><span class="badge" style="background: rgba(48, 86, 211, 0.05); color: var(--primary);">${course.department_name}</span></td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(course.instructor_name || 'N A')}&background=f1f5f9&color=64748b&rounded=true&size=24" class="avatar-sm" style="width:24px; height:24px;">
+                        <span style="font-size: 0.9rem;">${course.instructor_name || 'Not Assigned'}</span>
+                    </div>
+                </td>
+                <td><span class="text-muted">Yr ${course.year || 'N/A'}, Sem ${course.semester || 'N/A'}</span></td>
+                <td style="text-align: center;">
+                    <button class="icon-btn" title="Edit Course"><span class="material-symbols-outlined" style="font-size: 1.2rem;">edit_note</span></button>
+                    <button class="icon-btn delete" title="Remove" style="color: #ef4444;"><span class="material-symbols-outlined" style="font-size: 1.2rem;">delete_sweep</span></button>
+                </td>
+            </tr>
+        `).join('');
+    }
 
-    // Render courses to the table
-    const renderCourses = () => {
-        if (!courseTableBody) return;
-        courseTableBody.innerHTML = '';
-        courses.forEach(course => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${course.course_code}</strong></td>
-                <td>${course.title}</td>
-                <td>${course.department_name || '-'}</td>
-                <td>${course.credits || 3}</td>
-                <td><button class="icon-btn edit"><span class="material-symbols-outlined">edit</span></button></td>
-            `;
-            courseTableBody.appendChild(tr);
+    async function populateCourseFilterDropdowns() {
+        try {
+            const instRes = await authFetch(`${API_BASE_URL}/departments/institutions`);
+            const instData = await instRes.json();
+            if (instData.success && courseInstFilter) {
+                courseInstFilter.innerHTML = '<option value="all">All Institutions</option>' +
+                    instData.data.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+            }
+            const facRes = await authFetch(`${API_BASE_URL}/departments/faculties`);
+            const facData = await facRes.json();
+            if (facData.success && courseFacultyFilter) {
+                courseFacultyFilter.innerHTML = '<option value="all">All Faculties</option>' +
+                    facData.data.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+            }
+            const deptRes = await authFetch(`${API_BASE_URL}/departments`);
+            const deptData = await deptRes.json();
+            if (deptData.success && courseDeptFilter) {
+                courseDeptFilter.innerHTML = '<option value="all">All Departments</option>' +
+                    deptData.data.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function populateCreateCourseDropdowns() {
+        try {
+            const deptSelect = document.getElementById('course-dept-input');
+            const instructorSelect = document.getElementById('course-instructor-input');
+            const deptRes = await authFetch(`${API_BASE_URL}/departments`);
+            const deptData = await deptRes.json();
+            if (deptData.success && deptSelect) {
+                deptSelect.innerHTML = '<option value="">Select Department...</option>' +
+                    deptData.data.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+            }
+            const userRes = await authFetch(`${API_BASE_URL}/users`);
+            const userData = await userRes.json();
+            if (userData.success && instructorSelect) {
+                const instructors = userData.data.filter(u => u.role === 'instructor');
+                instructorSelect.innerHTML = '<option value="">Select Instructor...</option>' +
+                    instructors.map(i => `<option value="${i.id}">${i.first_name} ${i.last_name}</option>`).join('');
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    // Modal & Filter Event Listeners
+    const openCourseModalBtn = document.getElementById('open-create-course-modal');
+    const closeCourseModalBtns = document.querySelectorAll('.close-course-modal, .close-course-modal-btn');
+
+    if (openCourseModalBtn) {
+        openCourseModalBtn.addEventListener('click', () => {
+            createCourseModal.classList.add('show');
+            populateCreateCourseDropdowns();
         });
-    };
+    }
 
-    const courseForm = document.getElementById('course-form');
-    // Error feedback element
-    const courseErrorMsg = document.createElement('p');
-    courseErrorMsg.style.color = '#ef4444';
-    courseErrorMsg.style.fontSize = '0.85rem';
-    courseErrorMsg.style.marginTop = '8px';
-    courseErrorMsg.style.display = 'none';
-    if (courseForm) courseForm.appendChild(courseErrorMsg);
+    closeCourseModalBtns.forEach(btn => {
+        btn.addEventListener('click', () => createCourseModal.classList.remove('show'));
+    });
 
-    if (courseForm) {
-        courseForm.addEventListener('submit', async (e) => {
+    [courseInstFilter, courseFacultyFilter, courseDeptFilter, courseYearFilter, courseSemFilter].forEach(el => {
+        if (el) el.addEventListener('change', fetchCourses);
+    });
+    if (courseSearch) courseSearch.addEventListener('input', fetchCourses);
+    if (resetCoursesBtn) {
+        resetCoursesBtn.addEventListener('click', () => {
+            if (courseInstFilter) courseInstFilter.value = 'all';
+            if (courseFacultyFilter) courseFacultyFilter.value = 'all';
+            if (courseDeptFilter) courseDeptFilter.value = 'all';
+            if (courseYearFilter) courseYearFilter.value = 'all';
+            if (courseSemFilter) courseSemFilter.value = 'all';
+            if (courseSearch) courseSearch.value = '';
+            fetchCourses();
+        });
+    }
+
+    if (createCourseForm) {
+        createCourseForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            const title = document.getElementById('course-name').value.trim();
-            const course_code = document.getElementById('course-code').value.trim().toUpperCase();
-            const credits = document.getElementById('course-credits').value;
-            const deptName = document.getElementById('course-dept').value;
-
-            const foundDept = allDepartments.find(d => d.name === deptName);
-            const department_id = foundDept ? foundDept.id : null;
-
-            if (!title || !course_code || !department_id) {
-                courseErrorMsg.textContent = 'Please fill out all fields before submitting.';
-                courseErrorMsg.style.display = 'block';
-                return;
-            }
-
+            const payload = {
+                course_code: document.getElementById('course-code-input').value.trim().toUpperCase(),
+                title: document.getElementById('course-title-input').value.trim(),
+                description: document.getElementById('course-desc-input').value.trim(),
+                department_id: document.getElementById('course-dept-input').value,
+                instructor_id: document.getElementById('course-instructor-input').value,
+                year: parseInt(document.getElementById('course-year-input').value),
+                semester: parseInt(document.getElementById('course-semester-input').value)
+            };
             try {
-                const response = await authFetch(`${API_BASE_URL}/courses`, {
-                    method: 'POST',
-                    body: JSON.stringify({ title, course_code, credits, department_id })
-                });
-                const result = await response.json();
-
+                const res = await authFetch(`${API_BASE_URL}/courses`, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await res.json();
                 if (result.success) {
-                    alert('New course registered successfully!');
-                    courseForm.reset();
+                    alert('Course created successfully!');
+                    createCourseModal.classList.remove('show');
+                    createCourseForm.reset();
                     fetchCourses();
-                } else {
-                    alert(`Failed to create course: ${result.message}`);
-                }
-            } catch (error) {
-                alert(`Error: ${error.message}`);
+                } else { alert('Error: ' + result.message); }
+            } catch (err) { alert('Connection error'); }
+        });
+    }
+
+    // Navigation trigger for courses section
+    const currentNavItems = document.querySelectorAll('.nav-item');
+    currentNavItems.forEach(item => {
+        item.addEventListener('click', () => {
+            if (item.getAttribute('data-target') === 'courses') {
+                initCoursesSection();
             }
         });
+    });
+
+    // Check if courses view is active on load
+    if (document.querySelector('.nav-item.active[data-target="courses"]')) {
+        initCoursesSection();
     }
 
     // --- 3. Support Inbox Mockup ---
