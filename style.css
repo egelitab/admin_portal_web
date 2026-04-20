@@ -1537,3 +1537,12 @@ input:checked+.slider:before {
     font-size: var(--text-sm);
     text-align: center;
 }
+
+/* User Selection Mode */
+#users-table .checkbox-col {
+    display: none;
+}
+
+#users-table.select-mode .checkbox-col {
+    display: table-cell;
+}

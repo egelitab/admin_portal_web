@@ -468,12 +468,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td><span class="badge ${user.roleClass}">${user.role}</span></td>
                     <td class="text-muted dept-cell" title="${user.dept}">${user.dept}</td>
                     <td><span class="badge ${user.statusClass}">${user.status}</span></td>
-                    <td class="actions-cell" style="justify-content: center;">
-                        <label class="toggle-switch" title="Toggle Status">
-                            <input type="checkbox" class="status-toggle" data-id="${user.id}" ${user.status === 'Suspended' ? '' : 'checked'}>
-                            <span class="slider round"></span>
-                        </label>
-                    </td>
                 `;
                 usersTableBody.appendChild(tr);
             });
@@ -1434,28 +1428,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function attachToggleListeners() {
-        const toggleBoxes = document.querySelectorAll('.status-toggle');
-        toggleBoxes.forEach(toggle => {
-            // Remove previous listeners
-            const newToggle = toggle.cloneNode(true);
-            toggle.parentNode.replaceChild(newToggle, toggle);
+        const toggle = document.getElementById('drawer-status-toggle');
+        if (!toggle) return;
+        // Ensure we only attach the listener once
+        if (toggle.dataset.listenerAttached) return;
+        toggle.dataset.listenerAttached = 'true';
 
-            newToggle.addEventListener('change', async function () {
-                const id = this.getAttribute('data-id');
-                const isActive = this.checked;
-                try {
-                    await authFetch(`${API_BASE_URL}/users/${id}/status`, {
-                        method: 'PATCH',
-                        body: JSON.stringify({ is_active: isActive })
-                    });
+        toggle.addEventListener('change', async function () {
+            const id = this.getAttribute('data-id');
+            const isActive = this.checked;
+            try {
+                await authFetch(`${API_BASE_URL}/users/${id}/status`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ is_active: isActive })
+                });
+                fetchUsers();
 
-                    // Update user's status in usersData without refetching fully if we want,
-                    // but calling fetchUsers is easier to ensure data is synced:
-                    fetchUsers();
-                } catch (e) {
-                    console.error('Error toggling status:', e);
-                }
-            });
+                const statusText = isActive ? 'Active' : 'Suspended';
+                const statusClass = isActive ? 'status-active' : 'status-suspended';
+                document.getElementById('drawer-status').outerHTML = `<span id="drawer-status"><span class="badge ${statusClass}">${statusText}</span></span>`;
+            } catch (e) {
+                console.error('Error toggling status:', e);
+            }
         });
     }
 
@@ -1471,6 +1465,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const roleHtml = tr.cells[3].innerHTML;
         const dept = tr.cells[4].textContent;
         const statusHtml = tr.cells[5].innerHTML;
+        const userId = tr.querySelector('.row-checkbox').value;
+        const isActiveText = tr.cells[5].textContent.trim();
+        const isActive = isActiveText === 'Active';
 
         document.getElementById('drawer-avatar').src = avatarSrc;
         document.getElementById('drawer-name').textContent = nameText;
@@ -1478,6 +1475,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('drawer-role').outerHTML = `<span id="drawer-role">${roleHtml}</span>`;
         document.getElementById('drawer-dept').textContent = dept;
         document.getElementById('drawer-status').outerHTML = `<span id="drawer-status">${statusHtml}</span>`;
+
+        const statusToggle = document.getElementById('drawer-status-toggle');
+        if (statusToggle) {
+            statusToggle.setAttribute('data-id', userId);
+            statusToggle.checked = isActive;
+        }
 
         profileDrawer.classList.add('open');
     };
@@ -1638,5 +1641,38 @@ document.addEventListener('DOMContentLoaded', () => {
         interval = seconds / 60;
         if (interval > 1) return Math.floor(interval) + " minutes ago";
         return Math.floor(seconds) + " seconds ago";
+    }
+
+    // Select Users Mode Logic
+    const toggleSelectModeBtn = document.getElementById('toggle-select-mode-btn');
+    const toggleSelectText = document.getElementById('toggle-select-text');
+    const usersTable = document.getElementById('users-table');
+
+    if (toggleSelectModeBtn && usersTable) {
+        toggleSelectModeBtn.addEventListener('click', () => {
+            const isSelectMode = usersTable.classList.toggle('select-mode');
+
+            if (isSelectMode) {
+                toggleSelectText.textContent = 'Cancel Selection';
+                toggleSelectModeBtn.classList.remove('btn-secondary');
+                toggleSelectModeBtn.classList.add('btn-primary');
+            } else {
+                toggleSelectText.textContent = 'Select Users';
+                toggleSelectModeBtn.classList.remove('btn-primary');
+                toggleSelectModeBtn.classList.add('btn-secondary');
+
+                // Uncheck all boxes
+                const checkboxes = document.querySelectorAll('.row-checkbox');
+                checkboxes.forEach(cb => {
+                    cb.checked = false;
+                    const tr = cb.closest('tr');
+                    if (tr) tr.classList.remove('row-selected');
+                });
+
+                // Hide bulk action bar
+                const bulkActionBar = document.getElementById('bulk-action-bar');
+                if (bulkActionBar) bulkActionBar.style.display = 'none';
+            }
+        });
     }
 });

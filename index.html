@@ -281,8 +281,16 @@
 
                 <!-- Users Section -->
                 <section id="users" class="view-section">
-                    <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--text-dark); margin-bottom: 12px;">User
-                        Directory</h2>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--text-dark); margin: 0;">User
+                            Directory</h2>
+                        <button id="toggle-select-mode-btn" class="btn btn-secondary btn-sm"
+                            style="display: flex; gap: 8px; align-items: center;">
+                            <span class="material-symbols-outlined" style="font-size: 1.1rem;">checklist</span> <span
+                                id="toggle-select-text">Select Users</span>
+                        </button>
+                    </div>
 
                     <!-- Categorized Filter Bar -->
                     <div class="card" style="margin-bottom: 24px; padding: 20px;">
@@ -377,7 +385,6 @@
                                             class="material-symbols-outlined"
                                             style="font-size: 0.9rem; vertical-align: middle; color: #94a3b8; cursor: pointer;">sort</span>
                                     </th>
-                                    <th style="width: 13%; text-align: center; white-space: nowrap;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="users-table-body">
@@ -855,9 +862,17 @@
                     <label>Department</label>
                     <p id="drawer-dept">Department Name</p>
                 </div>
-                <div class="detail-group">
-                    <label>Status</label>
-                    <p id="drawer-status">Active</p>
+                <div class="detail-group" style="display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <label>Status</label>
+                        <p id="drawer-status">Active</p>
+                    </div>
+                    <div>
+                        <label class="toggle-switch" title="Toggle Status">
+                            <input type="checkbox" id="drawer-status-toggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
