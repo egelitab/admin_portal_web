@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.success) {
                 usersData = result.data.map(u => ({
                     id: u.id,
-                    name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Unknown',
+                    name: `${u.first_name || ''} ${u.middle_name || ''} ${u.last_name || ''}`.replace(/\s+/g, ' ').trim() || 'Unknown',
                     email: u.email,
                     role: u.role ? (u.role.charAt(0).toUpperCase() + u.role.slice(1)) : 'Student',
                     roleClass: u.role === 'admin' ? 'role-admin' : (u.role === 'instructor' ? 'role-instructor' : 'role-student'),
@@ -1460,7 +1460,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const openDrawerWithRowData = (tr) => {
         if (!tr || !profileDrawer) return;
         const avatarSrc = tr.querySelector('.avatar-sm').src;
-        const nameText = tr.querySelector('.user-name').textContent;
+        const nameText = tr.cells[1].querySelector('.user-name').textContent;
         const email = tr.cells[2].textContent;
         const roleHtml = tr.cells[3].innerHTML;
         const dept = tr.cells[4].textContent;
