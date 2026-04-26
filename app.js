@@ -31,10 +31,14 @@ document.addEventListener('DOMContentLoaded', () => {
     async function authFetch(url, options = {}) {
         const token = localStorage.getItem('token');
         const headers = {
-            'Content-Type': 'application/json',
             ...options.headers,
             'Authorization': `Bearer ${token}`
         };
+
+        // If body is NOT FormData, default to application/json
+        if (!(options.body instanceof FormData)) {
+            headers['Content-Type'] = 'application/json';
+        }
 
         const response = await fetch(url, { ...options, headers });
         if (response.status === 401) {
@@ -181,6 +185,62 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('click', (e) => {
         if (scheduleModal && e.target === scheduleModal) {
             scheduleModal.classList.remove('show');
+        }
+    });
+
+    // Digital Schedule Editor Logic
+    const digitalEditorModal = document.getElementById('digital-schedule-editor-modal');
+    const editorTitle = document.getElementById('editor-schedule-title');
+    const digitalScheduleBody = document.getElementById('digital-schedule-body');
+    const closeEditorBtns = document.querySelectorAll('.close-editor-modal, .close-editor-modal-btn');
+
+    const openDigitalScheduleEditor = (scheduleId) => {
+        // Find the schedule in the global schedules array if available
+        const s = schedules.find(item => item.id === scheduleId);
+        if (s && editorTitle) {
+            editorTitle.textContent = `Schedule: ${s.title || 'Digital Template'}`;
+        }
+
+        if (digitalEditorModal) digitalEditorModal.classList.add('show');
+        generateDigitalScheduleTable();
+    };
+    window.openDigitalScheduleEditor = openDigitalScheduleEditor;
+
+    function generateDigitalScheduleTable() {
+        if (!digitalScheduleBody) return;
+
+        const timeSlots = [
+            "2:00 - 3:45",
+            "3:50 - 6:20",
+            "7:35 - 9:20",
+            "9:25 - 12:05"
+        ];
+
+        let html = '';
+        timeSlots.forEach(time => {
+            html += `
+                <tr>
+                    <td style="font-weight: 600; background: #f8fafc;">${time}</td>
+                    <td contenteditable="true"></td>
+                    <td contenteditable="true"></td>
+                    <td contenteditable="true"></td>
+                    <td contenteditable="true"></td>
+                    <td contenteditable="true"></td>
+                </tr>
+            `;
+        });
+        digitalScheduleBody.innerHTML = html;
+    }
+
+    closeEditorBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (digitalEditorModal) digitalEditorModal.classList.remove('show');
+        });
+    });
+
+    window.addEventListener('click', (e) => {
+        if (digitalEditorModal && e.target === digitalEditorModal) {
+            digitalEditorModal.classList.remove('show');
         }
     });
 
@@ -378,6 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append('academic_years', JSON.stringify([year]));
                 formData.append('faculties', JSON.stringify(selectedCreateScheduleFaculties));
                 formData.append('departments', JSON.stringify(selectedCreateScheduleDepartments));
+                formData.append('sections', JSON.stringify([section]));
 
                 const response = await authFetch(`${API_BASE_URL}/schedules/upload`, {
                     method: 'POST',
@@ -657,7 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     result.data.forEach(s => {
                         const opt = document.createElement('option');
                         opt.value = s;
-                        opt.textContent = `Section ${s}`;
+                        opt.textContent = s.startsWith('Section') ? s : `Section ${s}`;
                         sectionSelect.appendChild(opt);
                     });
                 } else {
@@ -1113,13 +1174,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </td>
                     <td>
-                        ${s.academic_years ? s.academic_years.map(y => `<span class="badge" style="background: #e0f2fe; color: #0369a1; margin-right: 4px;">Year ${y}</span>`).join('') : '-'}
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <div>${s.academic_years ? s.academic_years.map(y => `<span class="badge" style="background: #e0f2fe; color: #0369a1; margin-right: 4px;">Year ${y}</span>`).join('') : '-'}</div>
+                            <div>${s.sections && s.sections.length > 0 ? s.sections.map(sec => `<span class="badge" style="background: #f0fdf4; color: #166534; margin-right: 4px;">Section ${sec}</span>`).join('') : ''}</div>
+                        </div>
                     </td>
                     <td class="text-muted">${date}</td>
                     <td style="text-align: center;">
                         <div style="display: flex; gap: 8px; justify-content: center;">
                             ${isDigital ? `
-                            <button class="btn btn-secondary btn-sm" title="Edit Digital Schedule" onclick="alert('Digital schedule editor coming soon')">
+                            <button class="btn btn-secondary btn-sm" title="Edit Digital Schedule" onclick="openDigitalScheduleEditor('${s.id}')">
                                 <span class="material-symbols-outlined" style="font-size: 1.1rem;">edit_calendar</span>
                             </button>` : `
                             <a href="${API_BASE_URL.replace('/api', '')}/${s.file_path.replace(/\\/g, '/')}" target="_blank" class="btn btn-secondary btn-sm" title="View Document">
