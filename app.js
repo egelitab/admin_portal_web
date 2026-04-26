@@ -195,8 +195,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeEditorBtns = document.querySelectorAll('.close-editor-modal, .close-editor-modal-btn');
 
     const openDigitalScheduleEditor = (scheduleId) => {
-        // Find the schedule in the global schedules array if available
-        const s = schedules.find(item => item.id === scheduleId);
+        // Find the schedule in the global allSchedules array
+        const s = allSchedules.find(item => item.id === scheduleId);
         if (s && editorTitle) {
             editorTitle.textContent = `Schedule: ${s.title || 'Digital Template'}`;
         }
@@ -394,10 +394,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const openCreateScheduleModalHandler = async () => {
         if (createScheduleModal) createScheduleModal.classList.add('show');
 
-        // Reset visibility for progressive disclosure
-        document.getElementById('create-schedule-department-wrapper').style.display = 'none';
-        document.getElementById('create-schedule-year-wrapper').style.display = 'none';
-        document.getElementById('create-schedule-section-wrapper').style.display = 'none';
+        // Progressive disclosure: Show only if previous value is set
+        const faculty = document.getElementById('create-schedule-faculty-input').value;
+        const dept = document.getElementById('create-schedule-department-input').value;
+        const year = document.getElementById('create-schedule-year-input').value;
+        const sem = document.getElementById('create-schedule-semester-input').value;
+
+        document.getElementById('create-schedule-department-wrapper').style.display = faculty ? 'block' : 'none';
+        document.getElementById('create-schedule-year-wrapper').style.display = dept ? 'block' : 'none';
+        document.getElementById('create-schedule-semester-wrapper').style.display = year ? 'block' : 'none';
+        document.getElementById('create-schedule-section-wrapper').style.display = sem ? 'block' : 'none';
 
         await populateCreateScheduleDropdowns();
     };
@@ -423,11 +429,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const submitBtn = document.getElementById('submit-create-schedule-btn');
             const year = document.getElementById('create-schedule-year-input').value;
+            const semester = document.getElementById('create-schedule-semester-input').value;
             const section = document.getElementById('create-schedule-section-input').value;
             const deptName = selectedCreateScheduleDepartments.length > 0 ? selectedCreateScheduleDepartments[0] : 'Unknown Dept';
 
-            // Auto-generate title: "department + year + section"
-            const generatedTitle = `${deptName} - Year ${year} - Section ${section}`;
+            // Auto-generate title: "department + year + semester + section"
+            const generatedTitle = `${deptName} - Year ${year} - Sem ${semester} - Section ${section}`;
 
             try {
                 submitBtn.disabled = true;
@@ -439,6 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append('faculties', JSON.stringify(selectedCreateScheduleFaculties));
                 formData.append('departments', JSON.stringify(selectedCreateScheduleDepartments));
                 formData.append('sections', JSON.stringify([section]));
+                formData.append('semester', semester);
 
                 const response = await authFetch(`${API_BASE_URL}/schedules/upload`, {
                     method: 'POST',
@@ -448,8 +456,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
                 if (result.success) {
                     alert('Schedule created successfully!');
-                    createScheduleModal.classList.remove('show');
-                    createScheduleForm.reset();
+                    // Keep the form values for creating the next one (e.g. next section)
+                    // We only close the modal if they want to, but here we'll keep it open 
+                    // or just not reset so they can see what they did.
+                    // For now, let's just NOT reset and NOT close automatically, or close and reopen with same values.
+                    // User said "remember", implying they might want to stay or reopen later.
+                    // Let's NOT reset.
                     fetchSchedules();
                 } else {
                     throw new Error(result.message);
@@ -678,6 +690,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const createFacInput = document.getElementById('create-schedule-faculty-input');
     const createDeptWrapper = document.getElementById('create-schedule-department-wrapper');
     const createYearWrapper = document.getElementById('create-schedule-year-wrapper');
+    const createSemesterWrapper = document.getElementById('create-schedule-semester-wrapper');
     const createSectionWrapper = document.getElementById('create-schedule-section-wrapper');
 
     if (createFacInput) {
@@ -690,10 +703,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 createDeptWrapper.style.display = 'block';
                 // Hide subsequent
                 createYearWrapper.style.display = 'none';
+                createSemesterWrapper.style.display = 'none';
                 createSectionWrapper.style.display = 'none';
                 // Reset subsequent values
                 document.getElementById('create-schedule-department-input').value = "";
                 document.getElementById('create-schedule-year-input').value = "";
+                document.getElementById('create-schedule-semester-input').value = "";
                 document.getElementById('create-schedule-section-input').value = "";
             }
         });
@@ -741,10 +756,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 await updateCreateScheduleSectionsList();
                 // Show year
                 createYearWrapper.style.display = 'block';
-                // Hide section
+                // Hide subsequent
+                createSemesterWrapper.style.display = 'none';
                 createSectionWrapper.style.display = 'none';
                 // Reset subsequent
                 document.getElementById('create-schedule-year-input').value = "";
+                document.getElementById('create-schedule-semester-input').value = "";
                 document.getElementById('create-schedule-section-input').value = "";
             }
         });
@@ -754,9 +771,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if (createYearInput) {
         createYearInput.addEventListener('change', (e) => {
             if (e.target.value) {
+                // Show semester
+                createSemesterWrapper.style.display = 'block';
+                // Hide section
+                createSectionWrapper.style.display = 'none';
+                // Reset subsequent
+                document.getElementById('create-schedule-semester-input').value = "";
+                document.getElementById('create-schedule-section-input').value = "";
+            }
+        });
+    }
+
+    const createSemesterInput = document.getElementById('create-schedule-semester-input');
+    if (createSemesterInput) {
+        createSemesterInput.addEventListener('change', (e) => {
+            if (e.target.value) {
                 // Show section
                 createSectionWrapper.style.display = 'block';
-                // Note: Sections already fetched and populated at Department change
+                // Reset section
                 document.getElementById('create-schedule-section-input').value = "";
             }
         });
@@ -1162,7 +1194,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ${isDigital ? 'edit_calendar' : (s.type === 'class' ? 'skillet' : 'assignment')}
                             </span>
                             <div>
-                                <span style="text-transform: capitalize; font-weight: 600; display: block;">${s.type} Schedule</span>
+                                <span style="text-transform: capitalize; font-weight: 600; display: block; ${isDigital ? 'cursor: pointer; color: var(--primary);' : ''}" 
+                                      ${isDigital ? `onclick="openDigitalScheduleEditor('${s.id}')"` : ''}>
+                                    ${s.type} Schedule
+                                </span>
                                 ${s.title ? `<span style="font-size: 0.75rem; color: var(--text-muted);">${s.title}</span>` : ''}
                             </div>
                         </div>
@@ -1175,8 +1210,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td>
                         <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <div>${s.academic_years ? s.academic_years.map(y => `<span class="badge" style="background: #e0f2fe; color: #0369a1; margin-right: 4px;">Year ${y}</span>`).join('') : '-'}</div>
-                            <div>${s.sections && s.sections.length > 0 ? s.sections.map(sec => `<span class="badge" style="background: #f0fdf4; color: #166534; margin-right: 4px;">Section ${sec}</span>`).join('') : ''}</div>
+                            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                ${s.academic_years ? s.academic_years.map(y => `<span class="badge" style="background: #e0f2fe; color: #0369a1;">Year ${y}</span>`).join('') : '-'}
+                                ${s.semester ? `<span class="badge" style="background: #fef3c7; color: #92400e;">Sem ${s.semester}</span>` : ''}
+                            </div>
+                            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                ${s.sections && s.sections.length > 0 ? s.sections.map(sec => `<span class="badge" style="background: #f0fdf4; color: #166534;">Section ${sec}</span>`).join('') : ''}
+                            </div>
                         </div>
                     </td>
                     <td class="text-muted">${date}</td>
