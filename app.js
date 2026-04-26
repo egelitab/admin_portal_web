@@ -5,6 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('admin-login-form');
     const loginError = document.getElementById('login-error');
 
+    // Global-ish state for shared data
+    let allDepartments = [];
+    let allFaculties = [];
+    let allInstitutions = [];
+    let usersData = [];
+
     function checkAuth() {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -89,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchDepartments();
         fetchFaculties();
         fetchInstitutions();
+        fetchSchedules();
         updateDashboardStats();
         fetchLogs();
     }
@@ -143,12 +150,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const openScheduleModalBtn = document.getElementById('open-upload-schedule-modal');
     const closeScheduleModalBtns = document.querySelectorAll('.close-schedule-modal, .close-schedule-modal-btn');
 
-    if (openScheduleModalBtn) {
-        openScheduleModalBtn.addEventListener('click', () => {
-            if (scheduleModal) scheduleModal.classList.add('show');
-            populateScheduleDropdowns();
-        });
-    }
+    const quickUploadBtn = document.getElementById('quick-action-upload-schedule');
+    const sectionUploadBtn = document.getElementById('section-action-upload-schedule');
+
+    const openScheduleModalHandler = async () => {
+        if (scheduleModal) scheduleModal.classList.add('show');
+        await populateScheduleDropdowns();
+    };
+
+    if (openScheduleModalBtn) openScheduleModalBtn.addEventListener('click', openScheduleModalHandler);
+    if (quickUploadBtn) quickUploadBtn.addEventListener('click', openScheduleModalHandler);
+    if (sectionUploadBtn) sectionUploadBtn.addEventListener('click', openScheduleModalHandler);
 
     closeScheduleModalBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -163,16 +175,143 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const uploadScheduleForm = document.getElementById('upload-schedule-form');
+    const scheduleDropZone = document.getElementById('schedule-drop-zone');
+    const scheduleFileInput = document.getElementById('actual-schedule-file');
+    const scheduleFileName = document.getElementById('schedule-file-name');
+
+    if (scheduleDropZone && scheduleFileInput) {
+        scheduleDropZone.addEventListener('click', () => scheduleFileInput.click());
+
+        scheduleFileInput.addEventListener('change', () => {
+            const file = scheduleFileInput.files[0];
+            if (file) {
+                scheduleFileName.textContent = file.name;
+                scheduleFileName.style.color = 'var(--primary)';
+                scheduleDropZone.style.borderColor = 'var(--primary)';
+                scheduleDropZone.style.background = 'rgba(48, 86, 211, 0.05)';
+            }
+        });
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            scheduleDropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            scheduleDropZone.addEventListener(eventName, () => {
+                scheduleDropZone.style.borderColor = 'var(--primary)';
+                scheduleDropZone.style.background = 'rgba(48, 86, 211, 0.05)';
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            scheduleDropZone.addEventListener(eventName, () => {
+                if (!scheduleFileInput.files.length) {
+                    scheduleDropZone.style.borderColor = '#cbd5e1';
+                    scheduleDropZone.style.background = '#f8fafc';
+                }
+            });
+        });
+
+        scheduleDropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length) {
+                scheduleFileInput.files = files;
+                const file = files[0];
+                scheduleFileName.textContent = file.name;
+                scheduleFileName.style.color = 'var(--primary)';
+            }
+        });
+    }
+
     if (uploadScheduleForm) {
-        uploadScheduleForm.addEventListener('submit', (e) => {
+        uploadScheduleForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            alert('Schedule uploaded successfully!');
-            if (scheduleModal) scheduleModal.classList.remove('show');
-            uploadScheduleForm.reset();
-            const fileNameDisplay = document.getElementById('schedule-file-name');
-            if (fileNameDisplay) {
-                fileNameDisplay.textContent = 'Supports Excel and Word Documents';
-                fileNameDisplay.style.color = 'var(--text-muted)';
+
+            const submitBtn = document.getElementById('submit-schedule-btn');
+            const progressContainer = document.getElementById('upload-progress-container');
+            const progressBar = document.getElementById('upload-progress-bar');
+            const progressPercent = document.getElementById('upload-percentage');
+            const statusText = document.getElementById('upload-status-text');
+
+            const formData = new FormData();
+            formData.append('type', document.getElementById('schedule-type-input').value);
+
+            // Get selected academic years
+            const years = Array.from(document.querySelectorAll('input[name="academic_year"]:checked')).map(cb => cb.value);
+            formData.append('academic_years', JSON.stringify(years));
+
+            // Get selected faculties and departments from our tags/state
+            formData.append('faculties', JSON.stringify(selectedScheduleFaculties));
+            formData.append('departments', JSON.stringify(selectedScheduleDepartments));
+
+            const fileItem = scheduleFileInput.files[0];
+            if (!fileItem) {
+                alert('Please select a file to upload');
+                return;
+            }
+            formData.append('file', fileItem);
+
+            try {
+                submitBtn.disabled = true;
+                progressContainer.style.display = 'block';
+                statusText.textContent = 'Uploading...';
+
+                // We use XMLHttpRequest to track progress since fetch doesn't support it easily
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `${API_BASE_URL}/schedules/upload`, true);
+                xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`);
+
+                xhr.upload.onprogress = (event) => {
+                    if (event.lengthComputable) {
+                        const percent = Math.round((event.loaded / event.total) * 100);
+                        progressBar.style.width = percent + '%';
+                        progressPercent.textContent = percent + '%';
+                    }
+                };
+
+                xhr.onload = function () {
+                    const response = JSON.parse(xhr.responseText);
+                    if (xhr.status >= 200 && xhr.status < 300 && response.success) {
+                        statusText.textContent = 'Completed!';
+                        statusText.style.color = '#16a34a';
+                        setTimeout(() => {
+                            if (scheduleModal) scheduleModal.classList.remove('show');
+                            uploadScheduleForm.reset();
+                            progressContainer.style.display = 'none';
+                            submitBtn.disabled = false;
+
+                            // Reset file UI
+                            scheduleFileName.textContent = 'Supported: .xlsx, .docx, .pdf';
+                            scheduleFileName.style.color = 'var(--text-muted)';
+                            scheduleDropZone.style.borderColor = '#cbd5e1';
+                            scheduleDropZone.style.background = '#f8fafc';
+
+                            // Refresh schedules list
+                            fetchSchedules();
+
+                            // Trigger dashboard update if needed
+                            updateDashboardStats();
+                        }, 1500);
+                    } else {
+                        throw new Error(response.message || 'Upload failed');
+                    }
+                };
+
+                xhr.onerror = function () {
+                    throw new Error('Network error during upload');
+                };
+
+                xhr.send(formData);
+
+            } catch (error) {
+                console.error('Upload Error:', error);
+                alert('Failed to upload schedule: ' + error.message);
+                submitBtn.disabled = false;
+                progressContainer.style.display = 'none';
             }
         });
     }
@@ -187,10 +326,19 @@ document.addEventListener('DOMContentLoaded', () => {
         tagsArray.forEach(tagText => {
             // Check if tag is 'All ...', typically we can remove it or keep it depending on preference.
             // Requirement says "when selected it should be displayed as a list with an 'x' to remove it"
+            let displayName = tagText;
+            if (type === 'faculty' && tagText !== 'All Faculties') {
+                const found = allFaculties.find(af => af.id == tagText || af.name == tagText);
+                if (found) displayName = found.name;
+            } else if (type === 'department' && tagText !== 'All Departments') {
+                const found = allDepartments.find(ad => ad.id == tagText || ad.name == tagText);
+                if (found) displayName = found.name;
+            }
+
             const tagEl = document.createElement('span');
             tagEl.style.cssText = 'display: inline-flex; align-items: center; background: rgba(48, 86, 211, 0.1); color: var(--primary); padding: 5px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 500; border: 1px solid rgba(48, 86, 211, 0.2);';
             tagEl.innerHTML = `
-                ${tagText}
+                ${displayName}
                 <span class="material-symbols-outlined" style="font-size: 1rem; margin-left: 6px; cursor: pointer;">close</span>
             `;
             tagEl.querySelector('.material-symbols-outlined').addEventListener('click', () => {
@@ -200,15 +348,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function updateScheduleDepartmentsList() {
+    async function updateScheduleDepartmentsList() {
         const deptSelect = document.getElementById('schedule-department-input');
         if (!deptSelect) return;
 
+        deptSelect.innerHTML = '<option value="Loading...">Loading Departments...</option>';
+
+        if (!allDepartments || allDepartments.length === 0) {
+            await fetchDepartments();
+        }
+
         deptSelect.innerHTML = '<option value="All Departments">All Departments</option>';
-        if (typeof allDepartments !== 'undefined' && Array.isArray(allDepartments)) {
+        if (Array.isArray(allDepartments) && allDepartments.length > 0) {
             let filteredDepts = allDepartments;
             if (selectedScheduleFaculties.length > 0 && !selectedScheduleFaculties.includes('All Faculties')) {
-                filteredDepts = allDepartments.filter(d => selectedScheduleFaculties.includes(d.faculty_name));
+                // Ensure faculty_name comparison is robust
+                filteredDepts = allDepartments.filter(d =>
+                    d.faculty_name && selectedScheduleFaculties.includes(d.faculty_name)
+                );
             }
 
             filteredDepts.forEach(d => {
@@ -220,7 +377,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (selectedScheduleFaculties.length > 0 && !selectedScheduleFaculties.includes('All Faculties')) {
-            const validDeptNames = ['All Departments', ...allDepartments.filter(d => selectedScheduleFaculties.includes(d.faculty_name)).map(d => d.name || d.id)];
+            const validDeptNames = ['All Departments', ...allDepartments
+                .filter(d => d.faculty_name && selectedScheduleFaculties.includes(d.faculty_name))
+                .map(d => d.name || d.id)];
             selectedScheduleDepartments = selectedScheduleDepartments.filter(dept => validDeptNames.includes(dept));
             renderTags(selectedScheduleDepartments, 'schedule-department-tags', 'department');
         }
@@ -249,11 +408,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function populateScheduleDropdowns() {
+    async function populateScheduleDropdowns() {
         const facSelect = document.getElementById('schedule-faculty-input');
         if (facSelect) {
+            facSelect.innerHTML = '<option value="Loading...">Loading Faculties...</option>';
+
+            if (!allFaculties || allFaculties.length === 0) {
+                await fetchFaculties();
+            }
+
             facSelect.innerHTML = '<option value="All Faculties">All Faculties</option>';
-            if (typeof allFaculties !== 'undefined' && Array.isArray(allFaculties)) {
+            if (Array.isArray(allFaculties) && allFaculties.length > 0) {
                 allFaculties.forEach(f => {
                     const opt = document.createElement('option');
                     opt.value = f.name || f.id;
@@ -266,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         selectedScheduleFaculties = [];
         selectedScheduleDepartments = [];
-        updateScheduleDepartmentsList();
+        await updateScheduleDepartmentsList();
         renderTags(selectedScheduleFaculties, 'schedule-faculty-tags', 'faculty');
         renderTags(selectedScheduleDepartments, 'schedule-department-tags', 'department');
     }
@@ -386,10 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDiskStorage();
 
     // 3. User Data & Pagination Logic
-    let usersData = [];
     let filteredUsers = [];
-    let allDepartments = [];
-    let allFaculties = [];
     let currentPage = 1;
     const itemsPerPage = 10;
 
@@ -630,7 +792,118 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     }
 
-    let allInstitutions = [];
+    let allSchedules = [];
+    async function fetchSchedules() {
+        try {
+            const response = await authFetch(`${API_BASE_URL}/schedules`);
+            const result = await response.json();
+            if (result.success) {
+                allSchedules = result.data;
+                renderSchedules();
+            }
+        } catch (error) {
+            console.error('Error fetching schedules:', error);
+        }
+    }
+
+    function renderSchedules() {
+        const container = document.getElementById('schedules-list-container');
+        if (!container) return;
+
+        if (allSchedules.length === 0) {
+            container.innerHTML = `
+                <div class="card" style="padding: 40px; text-align: center;">
+                    <span class="material-symbols-outlined"
+                        style="font-size: 3rem; color: var(--text-muted); margin-bottom: 15px; display: block;">calendar_view_day</span>
+                    <h3 style="margin-bottom: 8px;">No Schedules Found</h3>
+                    <p class="text-muted">Manage university class schedules and examination timetables here.</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div class="card table-card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Target</th>
+                            <th>Academic Years</th>
+                            <th>Uploaded At</th>
+                            <th style="text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        allSchedules.forEach(s => {
+            const date = new Date(s.created_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const facultyDisplayNames = s.faculties ? s.faculties.map(f => {
+                if (f === 'All Faculties') return f;
+                const found = allFaculties.find(af => af.id == f || af.name == f);
+                return found ? found.name : f;
+            }) : [];
+
+            const departmentDisplayNames = s.departments ? s.departments.map(d => {
+                if (d === 'All Departments') return d;
+                const found = allDepartments.find(ad => ad.id == d || ad.name == d);
+                return found ? found.name : d;
+            }) : [];
+
+            const facultyText = facultyDisplayNames.includes('All Faculties') ? 'All Faculties' : (facultyDisplayNames.length > 0 ? facultyDisplayNames.join(', ') : '-');
+            const deptText = departmentDisplayNames.includes('All Departments') ? 'All Departments' : (departmentDisplayNames.length > 0 ? departmentDisplayNames.join(', ') : '-');
+
+            html += `
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.2rem;">
+                                ${s.type === 'class' ? 'skillet' : 'assignment'}
+                            </span>
+                            <span style="text-transform: capitalize; font-weight: 600;">${s.type} Schedule</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.85rem;">
+                            <strong>Fac:</strong> ${facultyText}<br>
+                            <strong>Dept:</strong> ${deptText}
+                        </div>
+                    </td>
+                    <td>
+                        ${s.academic_years ? s.academic_years.map(y => `<span class="badge" style="background: #e0f2fe; color: #0369a1; margin-right: 4px;">Year ${y}</span>`).join('') : '-'}
+                    </td>
+                    <td class="text-muted">${date}</td>
+                    <td style="text-align: center;">
+                        <div style="display: flex; gap: 8px; justify-content: center;">
+                            <a href="${s.file_path}" target="_blank" class="btn btn-secondary btn-sm" title="View Document">
+                                <span class="material-symbols-outlined" style="font-size: 1.1rem;">visibility</span>
+                            </a>
+                            <button class="btn btn-secondary btn-sm" onclick="alert('Delete functionality coming soon')" style="color: #ef4444;">
+                                <span class="material-symbols-outlined" style="font-size: 1.1rem;">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        container.innerHTML = html;
+    }
+
     async function fetchInstitutions() {
         try {
             const response = await authFetch(`${API_BASE_URL}/departments/institutions`);
@@ -1316,28 +1589,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { console.error(e); }
     }
 
-    async function populateScheduleDropdowns() {
-        try {
-            const facultySelect = document.getElementById('schedule-faculty-input');
-            const deptSelect = document.getElementById('schedule-department-input');
 
-            // Faculties
-            const facRes = await authFetch(`${API_BASE_URL}/departments/faculties`);
-            const facData = await facRes.json();
-            if (facData.success && facultySelect) {
-                facultySelect.innerHTML = facData.data.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
-                setupSearchableSelect('schedule-faculty-container', true); // Pass true if we update searchable component to handle multiple
-            }
-
-            // Departments 
-            const deptRes = await authFetch(`${API_BASE_URL}/departments`);
-            const deptData = await deptRes.json();
-            if (deptData.success && deptSelect) {
-                deptSelect.innerHTML = deptData.data.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
-                setupSearchableSelect('schedule-department-container', true);
-            }
-        } catch (e) { console.error('Error populating schedule dropdowns', e); }
-    }
 
     async function populateCreateCourseDropdowns() {
         try {
