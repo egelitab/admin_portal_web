@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const gridContainer = document.getElementById('departments-grid-container');
         if (!gridContainer) return;
 
-        const facultyFilter = document.getElementById('faculty-filter');
+        const facultyFilter = document.getElementById('dept-section-faculty-filter');
         const selectedFaculty = facultyFilter ? facultyFilter.value : 'all';
 
         // Sort departments alphabetically
@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const studentCount = usersData.filter(u => u.dept === dept.name && u.role === 'Student').length;
 
             return `
-            <div class="department-row" onclick="navigateToUsersTabAndFilter('${dept.name}')">
+            <div class="department-row" onclick="showDepartmentDetails('${dept.id}')">
                 <div class="dept-info-main">
                     <div class="dept-icon-circle" style="background: rgba(48, 86, 211, 0.1); color: var(--primary);">
                         <span class="material-symbols-outlined">domain</span>
@@ -342,20 +342,63 @@ document.addEventListener('DOMContentLoaded', () => {
         gridContainer.innerHTML = addNewRowHtml + rowsHtml;
     }
 
+    window.showDepartmentDetails = function (deptId) {
+        const dept = allDepartments.find(d => d.id === deptId);
+        if (!dept) return;
+
+        const staffCount = usersData.filter(u => u.dept === dept.name && ['Admin', 'Instructor', 'Administrator'].includes(u.role)).length;
+        const studentCount = usersData.filter(u => u.dept === dept.name && u.role === 'Student').length;
+
+        document.getElementById('dept-detail-title').textContent = dept.name;
+        document.getElementById('dept-detail-faculty').textContent = dept.faculty_name || 'N/A';
+        document.getElementById('dept-detail-head').innerHTML = `
+            <span class="material-symbols-outlined" style="font-size: 1.2rem; color: var(--primary);">person</span>
+            ${dept.person_in_charge || 'No Head Appointed'}
+        `;
+        document.getElementById('dept-detail-desc').textContent = dept.description || 'No description available for this department.';
+        document.getElementById('dept-detail-staff-count').textContent = `${staffCount} Professionals`;
+        document.getElementById('dept-detail-student-count').textContent = `${studentCount} Enrolled`;
+
+        const modal = document.getElementById('dept-details-modal');
+        modal.classList.add('show');
+
+        // Setup "View Users" button
+        const viewUsersBtn = document.getElementById('view-dept-users-btn');
+        viewUsersBtn.onclick = () => {
+            modal.classList.remove('show');
+            navigateToUsersTabAndFilter(dept.name);
+        };
+    };
+
+    // Department Modal Close Logic
+    const closeDeptModalBtns = document.querySelectorAll('.close-dept-modal, .close-dept-modal-btn');
+    closeDeptModalBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('dept-details-modal').classList.remove('show');
+        });
+    });
+
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('dept-details-modal');
+        if (e.target === modal) {
+            modal.classList.remove('show');
+        }
+    });
+
     async function fetchFaculties() {
         try {
             const response = await authFetch(`${API_BASE_URL}/departments/faculties`);
             const result = await response.json();
             if (result.success) {
                 allFaculties = result.data;
-                const facultyFilterList = document.getElementById('faculty-filter');
-                if (facultyFilterList) {
-                    facultyFilterList.innerHTML = '<option value="all">All Faculties</option>';
+                const deptSectionFacultyList = document.getElementById('dept-section-faculty-filter');
+                if (deptSectionFacultyList) {
+                    deptSectionFacultyList.innerHTML = '<option value="all">All Faculties</option>';
                     allFaculties.forEach(f => {
                         const opt = document.createElement('option');
                         opt.value = f.name;
                         opt.textContent = f.name;
-                        facultyFilterList.appendChild(opt);
+                        deptSectionFacultyList.appendChild(opt);
                     });
                 }
 
@@ -410,6 +453,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event Listeners for Filters
     if (searchInput) searchInput.addEventListener('input', filterUsers);
     if (roleFilter) roleFilter.addEventListener('change', filterUsers);
+    const deptSectionFacultyFilter = document.getElementById('dept-section-faculty-filter');
+    if (deptSectionFacultyFilter) {
+        deptSectionFacultyFilter.addEventListener('change', renderDepartments);
+    }
+
     if (facultyFilter) {
         facultyFilter.addEventListener('change', () => {
             // Dependent Department Filter Update
