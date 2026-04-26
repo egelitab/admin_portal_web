@@ -194,9 +194,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const digitalScheduleBody = document.getElementById('digital-schedule-body');
     const closeEditorBtns = document.querySelectorAll('.close-editor-modal, .close-editor-modal-btn');
 
+    let currentEditingSchedule = null;
+
     const openDigitalScheduleEditor = (scheduleId) => {
         // Find the schedule in the global allSchedules array
         const s = allSchedules.find(item => item.id === scheduleId);
+        currentEditingSchedule = s;
         if (s && editorTitle) {
             editorTitle.textContent = `Schedule: ${s.title || 'Digital Template'}`;
         }
@@ -217,20 +220,172 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
 
         let html = '';
-        timeSlots.forEach(time => {
+        const savedContent = currentEditingSchedule ? (currentEditingSchedule.content || {}) : {};
+
+        timeSlots.forEach((time, index) => {
             html += `
                 <tr>
                     <td style="font-weight: 600; background: #f8fafc;">${time}</td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
-                    <td contenteditable="true"></td>
+                    <td onclick="openCoursePicker(this)" style="cursor: pointer; position: relative; min-height: 50px; height: 50px; padding: 10px;" class="schedule-slot" data-slot="${index}-0">${savedContent[`${index}-0`] ? `<div style="font-size: 0.8rem; font-weight: 600; color: var(--primary); line-height: 1.2;">${savedContent[`${index}-0`]}</div>` : ''}</td>
+                    <td onclick="openCoursePicker(this)" style="cursor: pointer; position: relative; min-height: 50px; height: 50px; padding: 10px;" class="schedule-slot" data-slot="${index}-1">${savedContent[`${index}-1`] ? `<div style="font-size: 0.8rem; font-weight: 600; color: var(--primary); line-height: 1.2;">${savedContent[`${index}-1`]}</div>` : ''}</td>
+                    <td onclick="openCoursePicker(this)" style="cursor: pointer; position: relative; min-height: 50px; height: 50px; padding: 10px;" class="schedule-slot" data-slot="${index}-2">${savedContent[`${index}-2`] ? `<div style="font-size: 0.8rem; font-weight: 600; color: var(--primary); line-height: 1.2;">${savedContent[`${index}-2`]}</div>` : ''}</td>
+                    <td onclick="openCoursePicker(this)" style="cursor: pointer; position: relative; min-height: 50px; height: 50px; padding: 10px;" class="schedule-slot" data-slot="${index}-3">${savedContent[`${index}-3`] ? `<div style="font-size: 0.8rem; font-weight: 600; color: var(--primary); line-height: 1.2;">${savedContent[`${index}-3`]}</div>` : ''}</td>
+                    <td onclick="openCoursePicker(this)" style="cursor: pointer; position: relative; min-height: 50px; height: 50px; padding: 10px;" class="schedule-slot" data-slot="${index}-4">${savedContent[`${index}-4`] ? `<div style="font-size: 0.8rem; font-weight: 600; color: var(--primary); line-height: 1.2;">${savedContent[`${index}-4`]}</div>` : ''}</td>
                 </tr>
             `;
         });
         digitalScheduleBody.innerHTML = html;
     }
+
+    async function saveDigitalScheduleContent() {
+        if (!currentEditingSchedule) return;
+
+        const btn = document.getElementById('save-digital-schedule-btn');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 1.1rem; animation: spin 2s linear infinite;">sync</span> Saving...';
+        btn.disabled = true;
+
+        try {
+            const slots = document.querySelectorAll('.schedule-slot');
+            const content = {};
+            slots.forEach(slot => {
+                const slotKey = slot.dataset.slot;
+                const courseName = slot.innerText.trim();
+                if (courseName) {
+                    content[slotKey] = courseName;
+                }
+            });
+
+            const response = await authFetch(`${API_BASE_URL}/schedules/${currentEditingSchedule.id}/content`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert('Schedule saved successfully');
+                // Update local data
+                currentEditingSchedule.content = content;
+                fetchSchedules(); // Refresh lists
+            } else {
+                alert('Error saving schedule: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error saving digital schedule:', error);
+            alert('Failed to save schedule');
+        } finally {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    }
+
+    const saveBtn = document.getElementById('save-digital-schedule-btn');
+    if (saveBtn) {
+        saveBtn.onclick = saveDigitalScheduleContent;
+    }
+
+    async function openCoursePicker(cell) {
+        if (!currentEditingSchedule) return;
+
+        // Create or get course picker element
+        let picker = document.getElementById('course-slot-picker');
+        if (!picker) {
+            picker = document.createElement('div');
+            picker.id = 'course-slot-picker';
+            picker.style.cssText = `
+                position: fixed;
+                background: white;
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+                z-index: 10000;
+                width: 250px;
+                padding: 10px;
+                display: none;
+            `;
+            document.body.appendChild(picker);
+        }
+
+        // Fetch courses for this specific context
+        const deptId = currentEditingSchedule.departments && currentEditingSchedule.departments.length > 0 ? currentEditingSchedule.departments[0] : '';
+        // Note: Departments in currentEditingSchedule might be names if we didn't store IDs. 
+        // Let's resolve the ID if needed.
+        let actualDeptId = deptId;
+        const foundDept = allDepartments.find(d => d.name === deptId || d.id === deptId);
+        if (foundDept) actualDeptId = foundDept.id;
+
+        const year = currentEditingSchedule.academic_years && currentEditingSchedule.academic_years.length > 0 ? currentEditingSchedule.academic_years[0] : '';
+        const semester = currentEditingSchedule.semester || '';
+
+        picker.innerHTML = '<div style="padding: 10px; text-align: center; color: var(--text-muted);">Loading courses...</div>';
+
+        // Positioning
+        const rect = cell.getBoundingClientRect();
+        picker.style.top = `${rect.bottom + window.scrollY + 5}px`;
+        picker.style.left = `${rect.left + window.scrollX}px`;
+        picker.style.display = 'block';
+
+        try {
+            const queryParams = new URLSearchParams({
+                department_id: actualDeptId,
+                year: year,
+                semester: semester
+            });
+            const response = await authFetch(`${API_BASE_URL}/courses?${queryParams}`);
+            const result = await response.json();
+
+            if (result.success && result.data.length > 0) {
+                let pickerHtml = `
+                    <div style="margin-bottom: 8px; font-weight: 600; font-size: 0.8rem; color: var(--text-muted); padding: 0 5px;">Select Course</div>
+                    <div class="picker-list" style="max-height: 200px; overflow-y: auto;">
+                `;
+                result.data.forEach(course => {
+                    const escapedTitle = course.title.replace(/'/g, "\\'");
+                    pickerHtml += `
+                            <div class="picker-item" style="padding: 8px 12px; cursor: pointer; border-radius: 8px; font-size: 0.9rem; margin-bottom: 2px;" 
+                                 onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'"
+                                 onclick="selectCourseForCell('${escapedTitle}', this.parentElement.parentElement.targetCell)">
+                                <div style="font-weight: 600;">${course.title}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">${course.course_code}</div>
+                            </div>
+                        `;
+                });
+                pickerHtml += '</div>';
+                picker.innerHTML = pickerHtml;
+            } else {
+                picker.innerHTML = `
+                    <div style="padding: 10px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                        No courses found for ${currentEditingSchedule.title || 'this section'}
+                        <div style="margin-top: 10px;">
+                            <button class="btn btn-secondary btn-sm" style="width: 100%;" onclick="this.parentElement.parentElement.style.display='none'">Close</button>
+                        </div>
+                    </div>`;
+            }
+            picker.targetCell = cell;
+        } catch (error) {
+            console.error('Error fetching courses for picker:', error);
+            picker.innerHTML = '<div style="padding: 10px; text-align: center; color: #ef4444;">Error loading courses</div>';
+        }
+
+        // Close on click outside
+        const closePicker = (e) => {
+            if (!picker.contains(e.target) && e.target !== cell) {
+                picker.style.display = 'none';
+                document.removeEventListener('click', closePicker);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closePicker), 10);
+    }
+
+    function selectCourseForCell(courseTitle, cell) {
+        if (!cell) return;
+        cell.innerHTML = courseTitle ? `<div style="font-size: 0.8rem; font-weight: 600; color: var(--primary); line-height: 1.2;">${courseTitle}</div>` : '';
+        const picker = document.getElementById('course-slot-picker');
+        if (picker) picker.style.display = 'none';
+    }
+    window.selectCourseForCell = selectCourseForCell;
+    window.openCoursePicker = openCoursePicker;
 
     closeEditorBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1129,6 +1284,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function deleteScheduleHandler(id) {
+        if (!confirm('Are you sure you want to delete this schedule? This action cannot be undone.')) return;
+
+        try {
+            const response = await authFetch(`${API_BASE_URL}/schedules/${id}`, {
+                method: 'DELETE'
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('Schedule deleted successfully');
+                fetchSchedules();
+                updateDashboardStats();
+            } else {
+                alert('Error deleting schedule: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error deleting schedule:', error);
+            alert('Error deleting schedule');
+        }
+    }
+    window.deleteScheduleHandler = deleteScheduleHandler;
+
     function renderSchedules() {
         const container = document.getElementById('schedules-list-container');
         if (!container) return;
@@ -1229,7 +1406,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <a href="${API_BASE_URL.replace('/api', '')}/${s.file_path.replace(/\\/g, '/')}" target="_blank" class="btn btn-secondary btn-sm" title="View Document">
                                 <span class="material-symbols-outlined" style="font-size: 1.1rem;">visibility</span>
                             </a>`}
-                            <button class="btn btn-secondary btn-sm" onclick="alert('Delete functionality coming soon')" style="color: #ef4444;">
+                            <button class="btn btn-secondary btn-sm" onclick="deleteScheduleHandler('${s.id}')" style="color: #ef4444;">
                                 <span class="material-symbols-outlined" style="font-size: 1.1rem;">delete</span>
                             </button>
                         </div>
