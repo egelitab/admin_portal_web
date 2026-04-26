@@ -92,14 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchLogs();
     }
 
-    // Call init if authorized
-    if (localStorage.getItem('token')) {
-        initDashboard();
-        // Update admin name in UI
-        const adminData = JSON.parse(localStorage.getItem('adminUser') || '{}');
-        const adminNameElements = document.querySelectorAll('.admin-name');
-        adminNameElements.forEach(el => el.textContent = `${adminData.first_name} ${adminData.last_name}`);
-    }
+    // (Moved init call to the bottom of the script)
 
     // 1. Navigation Logic
     const navItems = document.querySelectorAll('.nav-item');
@@ -138,10 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (statValues.length >= 4) {
                     statValues[0].textContent = stats.totalUsers.toLocaleString();
                     statValues[1].textContent = stats.activeSessions;
-                    // stats[2] is Disk storage in HTML, let's check index.html again
-                    // statValues[0] is Total Users
-                    // statValues[1] is Active Sessions
-                    // statValues[2] is actually handled by updateDiskStorage usually, but let's see
                 }
 
                 // Update specific elements by ID if they exist
@@ -156,6 +145,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Update Sector breakdown chart
                 updateChartsWithData(stats.deptBreakdown);
+
+                // Update Engagement Chart with real data
+                if (stats.engagement && typeof engagementChartInstance !== 'undefined' && engagementChartInstance) {
+                    chartDataMap.day = stats.engagement.day;
+                    chartDataMap.week = stats.engagement.week;
+                    chartDataMap.month = stats.engagement.month;
+
+                    const activeToggle = document.querySelector('.toggle-btn.active');
+                    const range = activeToggle ? activeToggle.getAttribute('data-range') : 'day';
+                    const selectedData = chartDataMap[range];
+
+                    engagementChartInstance.data.labels = selectedData.labels;
+                    engagementChartInstance.data.datasets[0].data = selectedData.data;
+                    engagementChartInstance.update();
+                }
             }
         } catch (error) {
             console.error('Error updating stats:', error);
@@ -178,6 +182,11 @@ document.addEventListener('DOMContentLoaded', () => {
             diskPercentageEl.textContent = `${percentage}%`;
             diskProgressEl.style.width = `${percentage}%`;
             diskTextEl.textContent = `${USED_STORAGE_GB}GB / ${TOTAL_STORAGE_GB}GB Used`;
+
+            const breakdownEl = document.getElementById('storage-breakdown');
+            if (breakdownEl && data) {
+                breakdownEl.textContent = `Assessments: ${data.assessmentsGB}GB | Materials: ${data.othersGB}GB`;
+            }
         }
 
         // Also update settings section stat card if it exists
@@ -320,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="dept-stats-row">
                     <div class="dept-stat-pill">
                         <span class="material-symbols-outlined">badge</span>
-                        <span class="pill-label">Staff:</span>
+                        <span class="pill-label">Instructors:</span>
                         <span class="pill-value">${staffCount || 0}</span>
                     </div>
                     <div class="dept-stat-pill">
@@ -356,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ${dept.person_in_charge || 'No Head Appointed'}
         `;
         document.getElementById('dept-detail-desc').textContent = dept.description || 'No description available for this department.';
-        document.getElementById('dept-detail-staff-count').textContent = `${staffCount} Professionals`;
+        document.getElementById('dept-detail-staff-count').textContent = `${staffCount} Instructors`;
         document.getElementById('dept-detail-student-count').textContent = `${studentCount} Enrolled`;
 
         const modal = document.getElementById('dept-details-modal');
@@ -1732,5 +1741,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (bulkActionBar) bulkActionBar.style.display = 'none';
             }
         });
+    }
+
+    // Final Initialization
+    if (localStorage.getItem('token')) {
+        initDashboard();
+        // Update admin name in UI
+        const adminData = JSON.parse(localStorage.getItem('adminUser') || '{}');
+        const adminNameElements = document.querySelectorAll('.admin-name');
+        adminNameElements.forEach(el => el.textContent = `${adminData.first_name || 'Admin'} ${adminData.last_name || 'User'}`);
     }
 });
