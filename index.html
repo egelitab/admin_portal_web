@@ -252,6 +252,16 @@
                                         <h4>Generate Report</h4>
                                     </div>
                                 </button>
+                                <button class="action-btn"
+                                    onclick="document.getElementById('upload-schedule-modal').classList.add('show'); if(window.populateScheduleDropdowns) window.populateScheduleDropdowns();">
+                                    <div class="icon-box purple"
+                                        style="background: rgba(139, 92, 246, 0.1); color: #8B5CF6;"><span
+                                            class="material-symbols-outlined">upload_file</span>
+                                    </div>
+                                    <div class="action-text">
+                                        <h4>Upload Schedule</h4>
+                                    </div>
+                                </button>
                                 <button class="action-btn add-shortcut-btn">
                                     <span class="material-symbols-outlined add-shortcut-icon">add</span>
                                     <span class="add-shortcut-text">Add Shortcut</span>
@@ -762,7 +772,7 @@
                         <h2>Class & Exam Schedules</h2>
                         <div style="display: flex; gap: 12px;">
                             <button class="btn btn-secondary"
-                                onclick="document.getElementById('upload-schedule-modal').classList.add('show')">
+                                onclick="document.getElementById('upload-schedule-modal').classList.add('show'); if(window.populateScheduleDropdowns) window.populateScheduleDropdowns();">
                                 <span class="material-symbols-outlined">upload</span>
                                 Upload Schedule
                             </button>
@@ -869,25 +879,21 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label>Faculty(s)</label>
-                                        <div class="searchable-select-container" id="schedule-faculty-container">
-                                            <input type="text" class="searchable-select-input"
-                                                placeholder="Select Faculty..." autocomplete="off">
-                                            <div class="searchable-select-dropdown"></div>
-                                            <select id="schedule-faculty-input" required style="display: none;"
-                                                multiple>
-                                            </select>
-                                        </div>
+                                        <select id="schedule-faculty-input"
+                                            style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); outline: none;">
+                                            <option value="All Faculties" selected>All Faculties</option>
+                                        </select>
+                                        <div id="schedule-faculty-tags"
+                                            style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
                                     </div>
-                                    <div class="form-group">
+                                    <div class="form-group" id="schedule-department-wrapper">
                                         <label>Department(s)</label>
-                                        <div class="searchable-select-container" id="schedule-department-container">
-                                            <input type="text" class="searchable-select-input"
-                                                placeholder="Select Department..." autocomplete="off">
-                                            <div class="searchable-select-dropdown"></div>
-                                            <select id="schedule-department-input" required style="display: none;"
-                                                multiple>
-                                            </select>
-                                        </div>
+                                        <select id="schedule-department-input"
+                                            style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); outline: none;">
+                                            <option value="All Departments" selected>All Departments</option>
+                                        </select>
+                                        <div id="schedule-department-tags"
+                                            style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
                                     </div>
                                 </div>
                                 <div class="form-group">

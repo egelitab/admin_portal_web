@@ -177,6 +177,134 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    let selectedScheduleFaculties = ["All Faculties"];
+    let selectedScheduleDepartments = ["All Departments"];
+
+    function renderTags(tagsArray, containerId, type) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        tagsArray.forEach(tagText => {
+            // Check if tag is 'All ...', typically we can remove it or keep it depending on preference.
+            // Requirement says "when selected it should be displayed as a list with an 'x' to remove it"
+            const tagEl = document.createElement('span');
+            tagEl.style.cssText = 'display: inline-flex; align-items: center; background: rgba(48, 86, 211, 0.1); color: var(--primary); padding: 5px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 500; border: 1px solid rgba(48, 86, 211, 0.2);';
+            tagEl.innerHTML = `
+                ${tagText}
+                <span class="material-symbols-outlined" style="font-size: 1rem; margin-left: 6px; cursor: pointer;">close</span>
+            `;
+            tagEl.querySelector('.material-symbols-outlined').addEventListener('click', () => {
+                removeTag(tagText, type);
+            });
+            container.appendChild(tagEl);
+        });
+    }
+
+    function updateScheduleDepartmentsList() {
+        const deptSelect = document.getElementById('schedule-department-input');
+        if (!deptSelect) return;
+
+        deptSelect.innerHTML = '<option value="All Departments">All Departments</option>';
+        if (typeof allDepartments !== 'undefined' && Array.isArray(allDepartments)) {
+            let filteredDepts = allDepartments;
+            if (selectedScheduleFaculties.length > 0 && !selectedScheduleFaculties.includes('All Faculties')) {
+                filteredDepts = allDepartments.filter(d => selectedScheduleFaculties.includes(d.faculty_name));
+            }
+
+            filteredDepts.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.name || d.id;
+                opt.textContent = d.name;
+                deptSelect.appendChild(opt);
+            });
+        }
+
+        if (selectedScheduleFaculties.length > 0 && !selectedScheduleFaculties.includes('All Faculties')) {
+            const validDeptNames = ['All Departments', ...allDepartments.filter(d => selectedScheduleFaculties.includes(d.faculty_name)).map(d => d.name || d.id)];
+            selectedScheduleDepartments = selectedScheduleDepartments.filter(dept => validDeptNames.includes(dept));
+            renderTags(selectedScheduleDepartments, 'schedule-department-tags', 'department');
+        }
+    }
+
+    function removeTag(tagText, type) {
+        if (type === 'faculty') {
+            selectedScheduleFaculties = selectedScheduleFaculties.filter(v => v !== tagText);
+            const facSelect = document.getElementById('schedule-faculty-input');
+            if (selectedScheduleFaculties.length === 0) {
+                if (facSelect) facSelect.value = 'All Faculties';
+            } else if (facSelect) {
+                facSelect.value = selectedScheduleFaculties[selectedScheduleFaculties.length - 1];
+            }
+            renderTags(selectedScheduleFaculties, 'schedule-faculty-tags', 'faculty');
+            updateScheduleDepartmentsList();
+        } else if (type === 'department') {
+            selectedScheduleDepartments = selectedScheduleDepartments.filter(v => v !== tagText);
+            const deptSelect = document.getElementById('schedule-department-input');
+            if (selectedScheduleDepartments.length === 0) {
+                if (deptSelect) deptSelect.value = 'All Departments';
+            } else if (deptSelect) {
+                deptSelect.value = selectedScheduleDepartments[selectedScheduleDepartments.length - 1];
+            }
+            renderTags(selectedScheduleDepartments, 'schedule-department-tags', 'department');
+        }
+    }
+
+    function populateScheduleDropdowns() {
+        const facSelect = document.getElementById('schedule-faculty-input');
+        if (facSelect) {
+            facSelect.innerHTML = '<option value="All Faculties">All Faculties</option>';
+            if (typeof allFaculties !== 'undefined' && Array.isArray(allFaculties)) {
+                allFaculties.forEach(f => {
+                    const opt = document.createElement('option');
+                    opt.value = f.name || f.id;
+                    opt.textContent = f.name;
+                    facSelect.appendChild(opt);
+                });
+            }
+            facSelect.value = "All Faculties";
+        }
+
+        selectedScheduleFaculties = [];
+        selectedScheduleDepartments = [];
+        updateScheduleDepartmentsList();
+        renderTags(selectedScheduleFaculties, 'schedule-faculty-tags', 'faculty');
+        renderTags(selectedScheduleDepartments, 'schedule-department-tags', 'department');
+    }
+    window.populateScheduleDropdowns = populateScheduleDropdowns;
+
+    const facSelect = document.getElementById('schedule-faculty-input');
+    if (facSelect) {
+        facSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (val && !selectedScheduleFaculties.includes(val)) {
+                if (val === 'All Faculties') {
+                    selectedScheduleFaculties = ['All Faculties'];
+                } else {
+                    selectedScheduleFaculties = selectedScheduleFaculties.filter(v => v !== 'All Faculties');
+                    selectedScheduleFaculties.push(val);
+                }
+                renderTags(selectedScheduleFaculties, 'schedule-faculty-tags', 'faculty');
+                updateScheduleDepartmentsList();
+            }
+        });
+    }
+
+    const deptSelect = document.getElementById('schedule-department-input');
+    if (deptSelect) {
+        deptSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (val && !selectedScheduleDepartments.includes(val)) {
+                if (val === 'All Departments') {
+                    selectedScheduleDepartments = ['All Departments'];
+                } else {
+                    selectedScheduleDepartments = selectedScheduleDepartments.filter(v => v !== 'All Departments');
+                    selectedScheduleDepartments.push(val);
+                }
+                renderTags(selectedScheduleDepartments, 'schedule-department-tags', 'department');
+            }
+        });
+    }
+
     // 2. Dashboard Stats Updater
     async function updateDashboardStats() {
         try {
