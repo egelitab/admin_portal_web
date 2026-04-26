@@ -336,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="department-row" onclick="showDepartmentDetails('${dept.id}')">
                 <div class="dept-info-main">
                     <div class="dept-icon-circle" style="background: rgba(48, 86, 211, 0.1); color: var(--primary);">
-                        <span class="material-symbols-outlined">domain</span>
+                        <span class="material-symbols-outlined">category</span>
                     </div>
                     <div class="dept-details">
                         <h3 class="dept-name-text">${dept.name}</h3>

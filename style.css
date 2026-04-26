@@ -65,7 +65,7 @@ body {
     display: flex;
     flex-direction: column;
     color: var(--text-light);
-    overflow: visible;
+    overflow: hidden;
     z-index: 100;
 }
 
@@ -90,16 +90,41 @@ body {
     margin-top: 10px;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    direction: rtl;
+    /* Moves scrollbar to the left */
+    padding-left: 5px;
+    /* Space for scrollbar */
 }
 
-.sidebar ul {
+/* Custom Scrollbar Styling (Left-side specific) */
+.sidebar nav::-webkit-scrollbar {
+    width: 5px;
+}
+
+.sidebar nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+.sidebar nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+#nav-list {
     list-style: none;
     display: flex;
     flex-direction: column;
     flex: 1;
     justify-content: flex-start;
-    gap: 4px;
+    gap: 12px;
     padding-bottom: 20px;
+    direction: ltr;
+    /* Restores normal text direction */
 }
 
 .nav-item {
@@ -159,6 +184,7 @@ body {
 .nav-group {
     display: flex;
     flex-direction: column;
+    gap: 0;
 }
 
 .nav-sub-list {
@@ -167,18 +193,14 @@ body {
     margin: 0;
     max-height: 0;
     overflow: hidden;
-    opacity: 0;
-    visibility: hidden;
-    transition: max-height 0.3s ease-out, opacity 0.3s ease, visibility 0.3s;
-    background: transparent;
+    transition: max-height 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
 }
 
 .nav-group.expanded .nav-sub-list {
     max-height: 500px;
-    opacity: 1;
-    visibility: visible;
-    background: rgba(0, 0, 0, 0.1);
-    transition: max-height 0.5s ease-in, opacity 0.3s ease;
+    transition: max-height 0.5s ease-in;
 }
 
 .sub-item {
@@ -244,10 +266,14 @@ body {
 
 #logout-btn {
     background: transparent;
+    color: #fda4af;
+    /* Soft red text */
 }
 
 #logout-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(244, 63, 94, 0.15);
+    /* Reddish tint on hover */
+    color: #fff;
 }
 
 /* Main Content */
