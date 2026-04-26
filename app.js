@@ -2815,6 +2815,235 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- 6. System Messaging Logic ---
+    let selectedUsersForMessage = [];
+    const sendMessageModal = document.getElementById('send-message-modal');
+    const openSendMessageModalBtn = document.getElementById('open-send-message-modal');
+    const closeMessageModalBtns = document.querySelectorAll('.close-message-modal, .close-message-modal-btn');
+    const sendMessageForm = document.getElementById('send-message-form');
+    const messageRecipientType = document.getElementById('message-recipient-type');
+    const individualRecipientsGroup = document.getElementById('individual-recipients-group');
+    const filterRecipientsGroup = document.getElementById('filter-recipients-group');
+    const messageSelectedBtn = document.getElementById('message-selected-btn');
+
+    async function fetchSystemMessages() {
+        try {
+            const response = await authFetch(`${API_BASE_URL}/system-messages/sent`);
+            const result = await response.json();
+            if (result.success) {
+                renderMessagesTable(result.data);
+                updateMessageStats(result.data);
+            }
+        } catch (error) {
+            console.error('Error fetching system messages:', error);
+        }
+    }
+
+    function renderMessagesTable(messages) {
+        const tableBody = document.getElementById('messages-table-body');
+        if (!tableBody) return;
+
+        if (messages.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">No messages sent yet.</td></tr>';
+            return;
+        }
+
+        tableBody.innerHTML = messages.map(msg => {
+            const date = new Date(msg.created_at).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            let recipientsDisplay = '-';
+            if (msg.recipient_type === 'all') {
+                recipientsDisplay = 'All Users';
+            } else if (msg.recipient_type === 'individual') {
+                recipientsDisplay = `${msg.recipients ? msg.recipients.length : 0} Selected Users`;
+            } else if (msg.recipient_type === 'filtered') {
+                const f = msg.recipients;
+                const parts = [];
+                if (f.roles && f.roles.length > 0) parts.push(`Roles: ${f.roles.join(', ')}`);
+                if (f.departments && f.departments.length > 0) parts.push(`Depts: ${f.departments.length}`);
+                if (f.years && f.years.length > 0) parts.push(`Years: ${f.years.join(', ')}`);
+                recipientsDisplay = parts.join(' | ') || 'Filters Applied';
+            }
+
+            return `
+                <tr>
+                    <td class="text-muted">${date}</td>
+                    <td><strong>${msg.title}</strong></td>
+                    <td><span class="badge ${msg.recipient_type === 'all' ? 'role-admin' : (msg.recipient_type === 'individual' ? 'role-instructor' : 'role-student')}">${msg.recipient_type.toUpperCase()}</span></td>
+                    <td class="text-muted" title="${JSON.stringify(msg.recipients).replace(/"/g, '&quot;')}">${recipientsDisplay}</td>
+                    <td style="text-align: center;">
+                        <button class="btn btn-secondary btn-sm" onclick="alert('Message Content:\\n\\n${msg.content.replace(/'/g, "\\'").replace(/\n/g, "\\n")}')">View</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function updateMessageStats(messages) {
+        const totalEl = document.getElementById('total-messages-sent');
+        const broadcastEl = document.getElementById('total-broadcasts');
+        const directEl = document.getElementById('total-direct-messages');
+
+        if (totalEl) totalEl.textContent = messages.length;
+        if (broadcastEl) broadcastEl.textContent = messages.filter(m => m.recipient_type === 'all').length;
+        if (directEl) directEl.textContent = messages.filter(m => m.recipient_type === 'individual').length;
+    }
+
+    if (openSendMessageModalBtn) {
+        openSendMessageModalBtn.addEventListener('click', () => {
+            selectedUsersForMessage = [];
+            updateSelectedRecipientsUI();
+            messageRecipientType.value = 'all';
+            individualRecipientsGroup.style.display = 'none';
+            filterRecipientsGroup.style.display = 'none';
+            sendMessageModal.classList.add('show');
+            populateDeptCheckboxes();
+        });
+    }
+
+    if (messageSelectedBtn) {
+        messageSelectedBtn.addEventListener('click', () => {
+            const selectedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
+            selectedUsersForMessage = Array.from(selectedCheckboxes).map(cb => {
+                const tr = cb.closest('tr');
+                const name = tr.querySelector('.user-name').textContent;
+                return { id: cb.value, name: name };
+            });
+
+            if (selectedUsersForMessage.length === 0) {
+                alert('Please select at least one user.');
+                return;
+            }
+
+            messageRecipientType.value = 'individual';
+            individualRecipientsGroup.style.display = 'block';
+            filterRecipientsGroup.style.display = 'none';
+            updateSelectedRecipientsUI();
+            sendMessageModal.classList.add('show');
+        });
+    }
+
+    function updateSelectedRecipientsUI() {
+        const listContainer = document.getElementById('selected-recipients-list');
+        if (!listContainer) return;
+
+        listContainer.innerHTML = selectedUsersForMessage.map(user => `
+            <span class="badge role-instructor" style="display: flex; align-items: center; gap: 5px; background: rgba(48, 86, 211, 0.1); color: var(--primary); padding: 4px 10px; border-radius: 6px;">
+                ${user.name}
+                <span class="material-symbols-outlined" style="font-size: 14px; cursor: pointer;" onclick="removeRecipientFromMessage('${user.id}')">close</span>
+            </span>
+        `).join('');
+
+        if (selectedUsersForMessage.length === 0 && messageRecipientType.value === 'individual') {
+            listContainer.innerHTML = '<span class="text-muted" style="font-size: 0.85rem;">No users selected. Select from Users directory.</span>';
+        }
+    }
+
+    window.removeRecipientFromMessage = function (id) {
+        selectedUsersForMessage = selectedUsersForMessage.filter(u => u.id !== id);
+        updateSelectedRecipientsUI();
+    };
+
+    if (messageRecipientType) {
+        messageRecipientType.addEventListener('change', (e) => {
+            const type = e.target.value;
+            individualRecipientsGroup.style.display = type === 'individual' ? 'block' : 'none';
+            filterRecipientsGroup.style.display = type === 'filtered' ? 'block' : 'none';
+
+            if (type === 'filtered') {
+                populateDeptCheckboxes();
+            }
+        });
+    }
+
+    function populateDeptCheckboxes() {
+        const container = document.getElementById('msg-dept-checkboxes');
+        if (!container || container.innerHTML !== '') return;
+
+        container.innerHTML = allDepartments.map(d => `
+            <label style="font-size: 0.85rem; font-weight: normal; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                <input type="checkbox" name="target-dept" value="${d.name}"> ${d.name}
+            </label>
+        `).join('');
+    }
+
+    closeMessageModalBtns.forEach(btn => {
+        btn.addEventListener('click', () => sendMessageModal.classList.remove('show'));
+    });
+
+    if (sendMessageForm) {
+        sendMessageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const type = messageRecipientType.value;
+            const title = document.getElementById('message-title').value;
+            const content = document.getElementById('message-content').value;
+
+            let recipients = null;
+            if (type === 'individual') {
+                recipients = selectedUsersForMessage.map(u => u.id);
+                if (recipients.length === 0) {
+                    alert('Please select at least one recipient.');
+                    return;
+                }
+            } else if (type === 'filtered') {
+                const roles = Array.from(document.querySelectorAll('input[name="target-role"]:checked')).map(cb => cb.value);
+                const years = Array.from(document.querySelectorAll('input[name="target-year"]:checked')).map(cb => cb.value);
+                const depts = Array.from(document.querySelectorAll('input[name="target-dept"]:checked')).map(cb => cb.value);
+                recipients = { roles, years, departments: depts };
+            }
+
+            try {
+                const btn = document.getElementById('confirm-send-message');
+                btn.disabled = true;
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = 'Sending...';
+
+                const response = await authFetch(`${API_BASE_URL}/system-messages/send`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        title,
+                        content,
+                        recipient_type: type,
+                        recipients
+                    })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Message sent successfully!');
+                    sendMessageModal.classList.remove('show');
+                    sendMessageForm.reset();
+                    fetchSystemMessages();
+                } else {
+                    alert('Failed to send message: ' + result.message);
+                }
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('An error occurred while sending the message.');
+                const btn = document.getElementById('confirm-send-message');
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-symbols-outlined">send</span> Send Message';
+            }
+        });
+    }
+
+    // Add listener to fetch messages when navigating to the tab
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            if (item.getAttribute('data-target') === 'system-messages') {
+                fetchSystemMessages();
+            }
+        });
+    });
+
     // Final Initialization
     if (localStorage.getItem('token')) {
         initDashboard();
