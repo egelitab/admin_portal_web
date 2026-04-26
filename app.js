@@ -138,6 +138,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Schedule Modal Logic
+    const scheduleModal = document.getElementById('upload-schedule-modal');
+    const openScheduleModalBtn = document.getElementById('open-upload-schedule-modal');
+    const closeScheduleModalBtns = document.querySelectorAll('.close-schedule-modal, .close-schedule-modal-btn');
+
+    if (openScheduleModalBtn) {
+        openScheduleModalBtn.addEventListener('click', () => {
+            if (scheduleModal) scheduleModal.classList.add('show');
+            populateScheduleDropdowns();
+        });
+    }
+
+    closeScheduleModalBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (scheduleModal) scheduleModal.classList.remove('show');
+        });
+    });
+
+    window.addEventListener('click', (e) => {
+        if (scheduleModal && e.target === scheduleModal) {
+            scheduleModal.classList.remove('show');
+        }
+    });
+
+    const uploadScheduleForm = document.getElementById('upload-schedule-form');
+    if (uploadScheduleForm) {
+        uploadScheduleForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Schedule uploaded successfully!');
+            if (scheduleModal) scheduleModal.classList.remove('show');
+            uploadScheduleForm.reset();
+            const fileNameDisplay = document.getElementById('schedule-file-name');
+            if (fileNameDisplay) {
+                fileNameDisplay.textContent = 'Supports Excel and Word Documents';
+                fileNameDisplay.style.color = 'var(--text-muted)';
+            }
+        });
+    }
+
     // 2. Dashboard Stats Updater
     async function updateDashboardStats() {
         try {
@@ -1149,6 +1188,29 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { console.error(e); }
     }
 
+    async function populateScheduleDropdowns() {
+        try {
+            const facultySelect = document.getElementById('schedule-faculty-input');
+            const deptSelect = document.getElementById('schedule-department-input');
+
+            // Faculties
+            const facRes = await authFetch(`${API_BASE_URL}/departments/faculties`);
+            const facData = await facRes.json();
+            if (facData.success && facultySelect) {
+                facultySelect.innerHTML = facData.data.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+                setupSearchableSelect('schedule-faculty-container', true); // Pass true if we update searchable component to handle multiple
+            }
+
+            // Departments 
+            const deptRes = await authFetch(`${API_BASE_URL}/departments`);
+            const deptData = await deptRes.json();
+            if (deptData.success && deptSelect) {
+                deptSelect.innerHTML = deptData.data.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+                setupSearchableSelect('schedule-department-container', true);
+            }
+        } catch (e) { console.error('Error populating schedule dropdowns', e); }
+    }
+
     async function populateCreateCourseDropdowns() {
         try {
             const deptSelect = document.getElementById('course-dept-input');
@@ -1175,7 +1237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { console.error(e); }
     }
 
-    function setupSearchableSelect(containerId) {
+    function setupSearchableSelect(containerId, isMultiple = false) {
         const container = document.getElementById(containerId);
         if (!container) return;
 
@@ -1191,10 +1253,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const renderDropdown = (filter = '') => {
             const filtered = options.filter(opt => opt.text.toLowerCase().includes(filter.toLowerCase()));
             dropdown.innerHTML = filtered.length ? filtered.map(opt => `
-                <div class="searchable-select-option" data-value="${opt.value}">${opt.text}</div>
+                <div class="searchable-select-option ${isMultiple && opt.selected ? 'selected' : ''}" data-value="${opt.value}">
+                    ${isMultiple ? `<input type="checkbox" ${opt.selected ? 'checked' : ''} style="margin-right: 8px;">` : ''}
+                    ${opt.text}
+                </div>
             `).join('') : '<div class="searchable-select-no-results">No matches found</div>';
 
             dropdown.classList.add('show');
+        };
+
+        const updateSelectedDisplay = () => {
+            if (isMultiple) {
+                const selectedTexts = Array.from(select.options).filter(opt => opt.selected).map(opt => opt.text);
+                input.value = selectedTexts.length > 0 ? selectedTexts.join(', ') : '';
+                input.placeholder = selectedTexts.length > 0 ? '' : 'Select Options...';
+            }
         };
 
         // Event Listeners
@@ -1202,13 +1275,29 @@ document.addEventListener('DOMContentLoaded', () => {
         input.addEventListener('input', () => renderDropdown(input.value));
 
         dropdown.addEventListener('click', (e) => {
-            const option = e.target.closest('.searchable-select-option');
-            if (option) {
-                const val = option.getAttribute('data-value');
-                const text = option.textContent;
-                input.value = text;
-                select.value = val;
-                dropdown.classList.remove('show');
+            const optionEl = e.target.closest('.searchable-select-option');
+            if (optionEl) {
+                const val = optionEl.getAttribute('data-value');
+                const option = Array.from(select.options).find(opt => opt.value === val);
+
+                if (isMultiple) {
+                    option.selected = !option.selected;
+                    const checkbox = optionEl.querySelector('input[type="checkbox"]');
+                    if (checkbox) checkbox.checked = option.selected;
+
+                    if (option.selected) {
+                        optionEl.classList.add('selected');
+                    } else {
+                        optionEl.classList.remove('selected');
+                    }
+                    updateSelectedDisplay();
+                    // Prevent input from losing focus or Dropdown closing so user can select more
+                    input.focus();
+                } else {
+                    input.value = option.text;
+                    select.value = val;
+                    dropdown.classList.remove('show');
+                }
                 select.dispatchEvent(new Event('change'));
             }
         });

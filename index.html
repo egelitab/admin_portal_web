@@ -58,6 +58,23 @@
                             </li>
                         </ul>
                     </li>
+                    <li class="nav-group">
+                        <div class="nav-item dropdown-toggle">
+                            <span class="material-symbols-outlined">event_note</span>
+                            <span>Academic Planning</span>
+                            <span class="material-symbols-outlined chevron-icon">expand_more</span>
+                        </div>
+                        <ul class="nav-sub-list">
+                            <li class="nav-item sub-item" data-target="schedules">
+                                <span class="material-symbols-outlined">schedule</span>
+                                <span>Schedules</span>
+                            </li>
+                            <li class="nav-item sub-item" data-target="academic-calendars">
+                                <span class="material-symbols-outlined">calendar_month</span>
+                                <span>Academic Calendars</span>
+                            </li>
+                        </ul>
+                    </li>
                     <li class="nav-item" data-target="logs">
                         <span class="material-symbols-outlined">history</span>
                         <span>Activity Logs</span>
@@ -739,6 +756,48 @@
                     </div>
                 </div>
 
+                <!-- Schedules Section -->
+                <section id="schedules" class="view-section">
+                    <div class="section-header">
+                        <h2>Class & Exam Schedules</h2>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn btn-secondary"
+                                onclick="document.getElementById('upload-schedule-modal').classList.add('show')">
+                                <span class="material-symbols-outlined">upload</span>
+                                Upload Schedule
+                            </button>
+                            <button class="btn btn-primary" onclick="alert('Schedule creation feature coming soon')">
+                                <span class="material-symbols-outlined">add</span>
+                                Create Schedule
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card" style="padding: 40px; text-align: center;">
+                        <span class="material-symbols-outlined"
+                            style="font-size: 3rem; color: var(--text-muted); margin-bottom: 15px; display: block;">calendar_view_day</span>
+                        <h3 style="margin-bottom: 8px;">No Schedules Found</h3>
+                        <p class="text-muted">Manage university class schedules and examination timetables here.</p>
+                    </div>
+                </section>
+
+                <!-- Academic Calendars Section -->
+                <section id="academic-calendars" class="view-section">
+                    <div class="section-header">
+                        <h2>Academic Calendars</h2>
+                        <button class="btn btn-primary" onclick="alert('Calendar upload feature coming soon')">
+                            <span class="material-symbols-outlined">upload</span>
+                            Upload Calendar
+                        </button>
+                    </div>
+                    <div class="card" style="padding: 40px; text-align: center;">
+                        <span class="material-symbols-outlined"
+                            style="font-size: 3rem; color: var(--text-muted); margin-bottom: 15px; display: block;">event_available</span>
+                        <h3 style="margin-bottom: 8px;">Academic Calendar Overview</h3>
+                        <p class="text-muted">View and manage important dates, semester breaks, and holiday schedules.
+                        </p>
+                    </div>
+                </section>
+
                 <!-- Logs Section -->
                 <section id="logs" class="view-section">
                     <div class="section-header">
@@ -789,6 +848,99 @@
                         </table>
                     </div>
                 </section>
+
+                <!-- Upload Schedule Modal -->
+                <div id="upload-schedule-modal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>Upload Schedule Document</h2>
+                            <span class="close-schedule-modal">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <form id="upload-schedule-form">
+                                <div class="form-group">
+                                    <label for="schedule-type-input">Schedule Type</label>
+                                    <select id="schedule-type-input" required>
+                                        <option value="" disabled selected hidden>Select Schedule Type</option>
+                                        <option value="class">Class Schedule</option>
+                                        <option value="exam">Exam Schedule</option>
+                                    </select>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Faculty(s)</label>
+                                        <div class="searchable-select-container" id="schedule-faculty-container">
+                                            <input type="text" class="searchable-select-input"
+                                                placeholder="Select Faculty..." autocomplete="off">
+                                            <div class="searchable-select-dropdown"></div>
+                                            <select id="schedule-faculty-input" required style="display: none;"
+                                                multiple>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Department(s)</label>
+                                        <div class="searchable-select-container" id="schedule-department-container">
+                                            <input type="text" class="searchable-select-input"
+                                                placeholder="Select Department..." autocomplete="off">
+                                            <div class="searchable-select-dropdown"></div>
+                                            <select id="schedule-department-input" required style="display: none;"
+                                                multiple>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Academic Year(s)</label>
+                                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                        <label
+                                            style="display: flex; align-items: center; gap: 5px; font-weight: normal; cursor: pointer;">
+                                            <input type="checkbox" name="academic_year" value="1"> Year 1
+                                        </label>
+                                        <label
+                                            style="display: flex; align-items: center; gap: 5px; font-weight: normal; cursor: pointer;">
+                                            <input type="checkbox" name="academic_year" value="2"> Year 2
+                                        </label>
+                                        <label
+                                            style="display: flex; align-items: center; gap: 5px; font-weight: normal; cursor: pointer;">
+                                            <input type="checkbox" name="academic_year" value="3"> Year 3
+                                        </label>
+                                        <label
+                                            style="display: flex; align-items: center; gap: 5px; font-weight: normal; cursor: pointer;">
+                                            <input type="checkbox" name="academic_year" value="4"> Year 4
+                                        </label>
+                                        <label
+                                            style="display: flex; align-items: center; gap: 5px; font-weight: normal; cursor: pointer;">
+                                            <input type="checkbox" name="academic_year" value="5"> Year 5
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin-top: 20px;">
+                                    <label>File Document (.xlsx, .docx)</label>
+                                    <div style="border: 2px dashed var(--border); padding: 30px; text-align: center; border-radius: 12px; background: #f8fafc; cursor: pointer;"
+                                        onclick="document.getElementById('actual-schedule-file').click()">
+                                        <span class="material-symbols-outlined"
+                                            style="font-size: 2.5rem; color: var(--primary); margin-bottom: 10px;">cloud_upload</span>
+                                        <p style="font-weight: 500; color: var(--text-dark);">Click to Browse or Drag
+                                            File Here</p>
+                                        <p id="schedule-file-name"
+                                            style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">
+                                            Supports Excel and Word Documents</p>
+                                    </div>
+                                    <input type="file" id="actual-schedule-file" accept=".xlsx, .docx" required
+                                        style="display: none;"
+                                        onchange="document.getElementById('schedule-file-name').textContent = this.files[0] ? this.files[0].name : 'Supports Excel and Word Documents'; document.getElementById('schedule-file-name').style.color = this.files[0] ? 'var(--primary)' : 'var(--text-muted)';">
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button"
+                                        class="btn btn-secondary close-schedule-modal-btn">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Upload Document</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Support Section -->
                 <section id="support" class="view-section">
                     <div class="section-header">

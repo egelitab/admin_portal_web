@@ -92,27 +92,16 @@ body {
     flex-direction: column;
     overflow-y: auto;
     direction: rtl;
-    /* Moves scrollbar to the left */
-    padding-left: 5px;
-    /* Space for scrollbar */
+    /* Hide scrollbar for IE, Edge and Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
-/* Custom Scrollbar Styling (Left-side specific) */
+/* Hide scrollbar for Chrome, Safari and Opera */
 .sidebar nav::-webkit-scrollbar {
-    width: 5px;
-}
-
-.sidebar nav::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.sidebar nav::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-}
-
-.sidebar nav::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    display: none;
 }
 
 #nav-list {
@@ -1190,6 +1179,9 @@ body {
     background: var(--surface);
     width: 100%;
     max-width: 500px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
     border-radius: var(--radius-card);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
@@ -1208,7 +1200,8 @@ body {
 }
 
 .close-modal,
-.close-profile-modal {
+.close-profile-modal,
+.close-schedule-modal {
     font-size: var(--text-2xl);
     cursor: pointer;
     color: var(--text-muted);
@@ -1216,12 +1209,14 @@ body {
 }
 
 .close-modal:hover,
-.close-profile-modal:hover {
+.close-profile-modal:hover,
+.close-schedule-modal:hover {
     color: var(--text-dark);
 }
 
 .modal-body {
     padding: 30px;
+    overflow-y: auto;
 }
 
 .form-group {
