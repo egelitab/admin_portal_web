@@ -97,7 +97,8 @@ body {
     display: flex;
     flex-direction: column;
     flex: 1;
-    justify-content: space-evenly;
+    justify-content: flex-start;
+    gap: 4px;
     padding-bottom: 20px;
 }
 
@@ -152,6 +153,56 @@ body {
     box-shadow: 15px -15px 0 var(--bg-main);
     background: transparent;
     pointer-events: none;
+}
+
+/* Nav Group & Sub-list */
+.nav-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.nav-sub-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease, visibility 0.3s;
+    background: transparent;
+}
+
+.nav-group.expanded .nav-sub-list {
+    max-height: 500px;
+    opacity: 1;
+    visibility: visible;
+    background: rgba(0, 0, 0, 0.1);
+    transition: max-height 0.5s ease-in, opacity 0.3s ease;
+}
+
+.sub-item {
+    padding-left: 45px !important;
+    margin-left: 20px;
+    font-size: var(--text-sm);
+    border-radius: 50px 0 0 50px;
+}
+
+.sub-item span.material-symbols-outlined {
+    font-size: var(--text-xl) !important;
+}
+
+.dropdown-toggle {
+    justify-content: space-between;
+}
+
+.chevron-icon {
+    transition: transform 0.3s ease;
+    font-size: var(--text-xl) !important;
+}
+
+.nav-group.expanded .chevron-icon {
+    transform: rotate(180deg);
 }
 
 .nav-item span {

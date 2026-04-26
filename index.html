@@ -33,13 +33,30 @@
                         <span class="material-symbols-outlined">group</span>
                         <span>Users</span>
                     </li>
-                    <li class="nav-item" data-target="departments">
-                        <span class="material-symbols-outlined">domain</span>
-                        <span>Departments</span>
-                    </li>
-                    <li class="nav-item" data-target="courses">
-                        <span class="material-symbols-outlined">menu_book</span>
-                        <span>Courses</span>
+                    <li class="nav-group">
+                        <div class="nav-item dropdown-toggle">
+                            <span class="material-symbols-outlined">account_tree</span>
+                            <span>Academic Units</span>
+                            <span class="material-symbols-outlined chevron-icon">expand_more</span>
+                        </div>
+                        <ul class="nav-sub-list">
+                            <li class="nav-item sub-item" data-target="institutions">
+                                <span class="material-symbols-outlined">corporate_fare</span>
+                                <span>Institutions</span>
+                            </li>
+                            <li class="nav-item sub-item" data-target="faculties">
+                                <span class="material-symbols-outlined">school</span>
+                                <span>Faculties</span>
+                            </li>
+                            <li class="nav-item sub-item" data-target="departments">
+                                <span class="material-symbols-outlined">domain</span>
+                                <span>Departments</span>
+                            </li>
+                            <li class="nav-item sub-item" data-target="courses">
+                                <span class="material-symbols-outlined">menu_book</span>
+                                <span>Courses</span>
+                            </li>
+                        </ul>
                     </li>
                     <li class="nav-item" data-target="logs">
                         <span class="material-symbols-outlined">history</span>
@@ -517,6 +534,58 @@
                                 </tr>
                             </thead>
                             <tbody id="courses-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Faculties Section -->
+                <section id="faculties" class="view-section">
+                    <div class="section-header">
+                        <h2>Academic Faculties</h2>
+                        <button class="btn btn-primary" onclick="alert('Feature coming soon')">
+                            <span class="material-symbols-outlined">add</span>
+                            Add Faculty
+                        </button>
+                    </div>
+                    <div class="card table-card">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Faculty Name</th>
+                                    <th>Institution</th>
+                                    <th style="text-align: center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="faculties-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Institutions Section -->
+                <section id="institutions" class="view-section">
+                    <div class="section-header">
+                        <h2>Universities & Institutions</h2>
+                        <button class="btn btn-primary" onclick="alert('Feature coming soon')">
+                            <span class="material-symbols-outlined">add</span>
+                            Add Institution
+                        </button>
+                    </div>
+                    <div class="card table-card">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Location/Details</th>
+                                    <th style="text-align: center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="institutions-table-body">
                                 <!-- Populated dynamically -->
                             </tbody>
                         </table>

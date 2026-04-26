@@ -88,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchUsers();
         fetchDepartments();
         fetchFaculties();
+        fetchInstitutions();
         updateDashboardStats();
         fetchLogs();
     }
@@ -100,22 +101,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const headerTitle = document.getElementById('section-title');
 
     navItems.forEach(item => {
-        item.addEventListener('click', () => {
+        item.addEventListener('click', (e) => {
             if (item.id === 'logout-btn') return;
 
+            // Handle dropdown toggle
+            if (item.classList.contains('dropdown-toggle')) {
+                const group = item.closest('.nav-group');
+                if (group) {
+                    group.classList.toggle('expanded');
+                }
+                return;
+            }
+
             navItems.forEach(n => n.classList.remove('active'));
-            item.classList.add('active'); // Instant switch
+            item.classList.add('active');
 
-            viewSections.forEach(v => v.classList.remove('active'));
             const target = item.getAttribute('data-target');
-            document.getElementById(target).classList.add('active');
+            if (target) {
+                viewSections.forEach(v => v.classList.remove('active'));
+                const targetSection = document.getElementById(target);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                }
 
-            const title = item.querySelector('span:nth-child(2)').textContent;
-            headerTitle.textContent = title;
+                // Update Header Title
+                const span = item.querySelector('span:not(.material-symbols-outlined)');
+                if (span) {
+                    headerTitle.textContent = span.textContent;
+                }
 
-            const createUserBtn = document.getElementById('open-create-user-modal');
-            if (createUserBtn) {
-                createUserBtn.style.display = target === 'users' ? 'flex' : 'none';
+                const createUserBtn = document.getElementById('open-create-user-modal');
+                if (createUserBtn) {
+                    createUserBtn.style.display = target === 'users' ? 'flex' : 'none';
+                }
             }
         });
     });
@@ -421,10 +439,58 @@ document.addEventListener('DOMContentLoaded', () => {
                         deptFacultyList.appendChild(opt);
                     });
                 }
+
+                renderFaculties();
             }
         } catch (error) {
             console.error('Error fetching faculties:', error);
         }
+    }
+
+    function renderFaculties() {
+        const tableBody = document.getElementById('faculties-table-body');
+        if (!tableBody) return;
+
+        tableBody.innerHTML = allFaculties.map(f => `
+            <tr>
+                <td>${f.id}</td>
+                <td><strong>${f.name}</strong></td>
+                <td>${f.institution_name || 'Main University'}</td>
+                <td style="text-align: center;">
+                    <button class="btn btn-secondary btn-sm" onclick="alert('Edit faculty id: ${f.id}')">Edit</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    let allInstitutions = [];
+    async function fetchInstitutions() {
+        try {
+            const response = await authFetch(`${API_BASE_URL}/departments/institutions`);
+            const result = await response.json();
+            if (result.success) {
+                allInstitutions = result.data;
+                renderInstitutions();
+            }
+        } catch (error) {
+            console.error('Error fetching institutions:', error);
+        }
+    }
+
+    function renderInstitutions() {
+        const tableBody = document.getElementById('institutions-table-body');
+        if (!tableBody) return;
+
+        tableBody.innerHTML = allInstitutions.map(inst => `
+            <tr>
+                <td>${inst.id}</td>
+                <td><strong>${inst.name}</strong></td>
+                <td>${inst.location || 'Standard Campus'}</td>
+                <td style="text-align: center;">
+                    <button class="btn btn-secondary btn-sm" onclick="alert('Edit institution id: ${inst.id}')">Edit</button>
+                </td>
+            </tr>
+        `).join('');
     }
 
     // --- 3. Filtering Logic ---
