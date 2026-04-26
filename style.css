@@ -945,115 +945,149 @@ body {
 }
 
 /* Departments Grid */
+/* Departments List (Updated from Grid) */
 .departments-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 24px;
-}
-
-.department-card {
-    background: var(--surface);
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
-    padding: 24px;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-    border: 1px solid var(--border);
-    cursor: pointer;
-}
-
-.department-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-    border-color: var(--primary);
-}
-
-.dept-card-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 4px;
-}
-
-.dept-title-area {
-    display: flex;
-    align-items: center;
     gap: 12px;
 }
 
-.dept-icon-small {
+.department-row {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.department-row:hover {
+    transform: translateX(8px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    border-color: var(--primary);
+    background: #fdfdfd;
+}
+
+.dept-info-main {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 1;
+}
+
+.dept-icon-circle {
     width: 48px;
     height: 48px;
-    border-radius: 12px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.dept-icon-small .material-symbols-outlined {
-    font-size: var(--text-2xl);
+.dept-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
-.dept-name {
-    font-size: var(--text-lg);
+.dept-name-text {
+    font-size: 1.1rem;
     font-weight: 600;
     color: var(--text-dark);
     margin: 0;
 }
 
-.edit-dept {
-    color: var(--text-muted);
-    padding: 4px;
+.dept-faculty-text {
+    font-size: 0.85rem;
+    margin: 0;
 }
 
-.edit-dept:hover {
-    color: var(--primary);
-    background: rgba(48, 86, 211, 0.05);
-}
-
-.dept-card-middle {
-    margin-bottom: 20px;
-    padding-left: 60px;
-    /* Align text with the start of the title, skipping the 48px icon + 12px gap */
-}
-
-.dept-stats-boxes {
+.dept-stats-row {
     display: flex;
     gap: 16px;
+    flex: 1;
+    justify-content: center;
 }
 
-.stat-box {
-    flex: 1;
+.dept-stat-pill {
     background: #f8fafc;
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px;
+    border-radius: 50px;
+    padding: 6px 16px;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    transition: background 0.3s ease, border-color 0.3s ease;
+    gap: 8px;
+    transition: all 0.3s ease;
 }
 
-.department-card:hover .stat-box {
+.department-row:hover .dept-stat-pill {
     background: white;
     border-color: #cbd5e1;
 }
 
-.stat-label {
-    font-size: var(--text-xs);
-    text-transform: uppercase;
+.dept-stat-pill .material-symbols-outlined {
+    font-size: 1.1rem;
     color: var(--text-muted);
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    margin-bottom: 4px;
 }
 
-.stat-num {
-    font-size: var(--text-xl);
+.pill-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.pill-value {
+    font-size: 0.9rem;
     font-weight: 700;
     color: var(--primary);
+}
+
+.dept-actions-area {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: flex-end;
+    flex: 0.5;
+}
+
+.chevron {
+    color: #cbd5e1;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.department-row:hover .chevron {
+    color: var(--primary);
+    transform: translateX(4px);
+}
+
+.add-new-dept-row {
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    color: var(--primary);
+    justify-content: center;
+    gap: 12px;
+    padding: 12px;
+    box-shadow: none;
+}
+
+.add-new-dept-row:hover {
+    border-color: var(--primary);
+    background: rgba(48, 86, 211, 0.03);
+    transform: scale(1.01);
+}
+
+.add-new-dept-row h3 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.add-new-dept-row span {
+    font-size: 1.5rem;
 }
 
 /* Forms & Modals */

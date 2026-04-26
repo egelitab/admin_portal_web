@@ -286,50 +286,60 @@ document.addEventListener('DOMContentLoaded', () => {
         const facultyFilter = document.getElementById('faculty-filter');
         const selectedFaculty = facultyFilter ? facultyFilter.value : 'all';
 
-        const filteredDivs = allDepartments.filter(d => {
+        // Sort departments alphabetically
+        const sortedDepartments = [...allDepartments].sort((a, b) => a.name.localeCompare(b.name));
+
+        const filteredDepts = sortedDepartments.filter(d => {
             if (selectedFaculty === 'all') return true;
             return d.faculty_name === selectedFaculty;
         });
 
-        const addNewCardHtml = `
-            <div class="department-card add-new-dept-card" onclick="document.getElementById('add-department-modal').style.display='flex'">
-                <span class="material-symbols-outlined">add</span>
+        const addNewRowHtml = `
+            <div class="department-row add-new-dept-row" onclick="document.getElementById('add-department-modal').style.display='flex'">
+                <span class="material-symbols-outlined">add_circle</span>
                 <h3>Add New Department</h3>
             </div>
         `;
 
-        const cardsHtml = filteredDivs.map(dept => {
+        const rowsHtml = filteredDepts.map(dept => {
             const staffCount = usersData.filter(u => u.dept === dept.name && ['Admin', 'Instructor', 'Administrator'].includes(u.role)).length;
             const studentCount = usersData.filter(u => u.dept === dept.name && u.role === 'Student').length;
 
             return `
-            <div class="department-card" onclick="navigateToUsersTabAndFilter('${dept.name}')">
-                <div class="dept-card-top">
-                    <div class="dept-title-area">
-                        <div class="dept-icon-small" style="background: rgba(48, 86, 211, 0.1); color: var(--primary);">
-                            <span class="material-symbols-outlined">domain</span>
-                        </div>
-                        <h3 class="dept-name" title="${dept.name}" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px;">${dept.name}</h3>
+            <div class="department-row" onclick="navigateToUsersTabAndFilter('${dept.name}')">
+                <div class="dept-info-main">
+                    <div class="dept-icon-circle" style="background: rgba(48, 86, 211, 0.1); color: var(--primary);">
+                        <span class="material-symbols-outlined">domain</span>
                     </div>
-                    <button class="icon-btn edit-dept" title="Edit Department" onclick="event.stopPropagation()"><span class="material-symbols-outlined">edit</span></button>
+                    <div class="dept-details">
+                        <h3 class="dept-name-text">${dept.name}</h3>
+                        <p class="dept-faculty-text text-muted">${dept.faculty_name || 'N/A'}</p>
+                    </div>
                 </div>
-                <div class="dept-card-middle">
-                    <p class="text-muted" style="font-size: 0.85rem;" title="${dept.faculty_name || 'N/A'}">${dept.faculty_name || 'N/A'}</p>
+                
+                <div class="dept-stats-row">
+                    <div class="dept-stat-pill">
+                        <span class="material-symbols-outlined">badge</span>
+                        <span class="pill-label">Staff:</span>
+                        <span class="pill-value">${staffCount || 0}</span>
+                    </div>
+                    <div class="dept-stat-pill">
+                        <span class="material-symbols-outlined">group</span>
+                        <span class="pill-label">Students:</span>
+                        <span class="pill-value">${studentCount || 0}</span>
+                    </div>
                 </div>
-                <div class="dept-stats-boxes">
-                    <div class="stat-box">
-                        <span class="stat-label">Staff</span>
-                        <span class="stat-num">${staffCount || 0}</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Students</span>
-                        <span class="stat-num">${studentCount || 0}</span>
-                    </div>
+
+                <div class="dept-actions-area">
+                    <button class="icon-btn edit-dept" title="Edit Department" onclick="event.stopPropagation()">
+                        <span class="material-symbols-outlined">edit_note</span>
+                    </button>
+                    <span class="material-symbols-outlined chevron">chevron_right</span>
                 </div>
             </div>`;
         }).join('');
 
-        gridContainer.innerHTML = cardsHtml + addNewCardHtml;
+        gridContainer.innerHTML = addNewRowHtml + rowsHtml;
     }
 
     async function fetchFaculties() {
