@@ -261,6 +261,14 @@
                                         <h4>Upload Schedule</h4>
                                     </div>
                                 </button>
+                                <button class="action-btn" id="quick-action-create-schedule">
+                                    <div class="icon-box" style="background: rgba(16, 185, 129, 0.1); color: #10B981;">
+                                        <span class="material-symbols-outlined">add_task</span>
+                                    </div>
+                                    <div class="action-text">
+                                        <h4>Create Schedule</h4>
+                                    </div>
+                                </button>
                                 <button class="action-btn add-shortcut-btn">
                                     <span class="material-symbols-outlined add-shortcut-icon">add</span>
                                     <span class="add-shortcut-text">Add Shortcut</span>
@@ -774,7 +782,7 @@
                                 <span class="material-symbols-outlined">upload</span>
                                 Upload Schedule
                             </button>
-                            <button class="btn btn-primary" onclick="alert('Schedule creation feature coming soon')">
+                            <button class="btn btn-primary" id="open-create-schedule-modal">
                                 <span class="material-symbols-outlined">add</span>
                                 Create Schedule
                             </button>
@@ -918,9 +926,14 @@
                                 <div class="form-group" style="margin-bottom: 20px;">
                                     <label style="font-weight: 600; display: block; margin-bottom: 8px;">Target
                                         Faculties</label>
-                                    <select id="schedule-faculty-input" class="filter-dropdown" style="width: 100%;">
-                                        <option value="All Faculties">All Faculties</option>
-                                    </select>
+                                    <div id="schedule-faculty-container" class="searchable-select-container">
+                                        <input type="text" class="searchable-select-input"
+                                            placeholder="Type to search faculties...">
+                                        <div class="searchable-select-dropdown"></div>
+                                        <select id="schedule-faculty-input" style="display: none;">
+                                            <option value="All Faculties">All Faculties</option>
+                                        </select>
+                                    </div>
                                     <div id="schedule-faculty-tags"
                                         style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
                                 </div>
@@ -928,9 +941,14 @@
                                 <div class="form-group" id="schedule-department-wrapper" style="margin-bottom: 20px;">
                                     <label style="font-weight: 600; display: block; margin-bottom: 8px;">Target
                                         Departments</label>
-                                    <select id="schedule-department-input" class="filter-dropdown" style="width: 100%;">
-                                        <option value="All Departments">All Departments</option>
-                                    </select>
+                                    <div id="schedule-department-container" class="searchable-select-container">
+                                        <input type="text" class="searchable-select-input"
+                                            placeholder="Type to search departments...">
+                                        <div class="searchable-select-dropdown"></div>
+                                        <select id="schedule-department-input" style="display: none;">
+                                            <option value="All Departments">All Departments</option>
+                                        </select>
+                                    </div>
                                     <div id="schedule-department-tags"
                                         style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
                                 </div>
@@ -975,6 +993,85 @@
                                         <span class="material-symbols-outlined"
                                             style="font-size: 1.2rem;">cloud_upload</span>
                                         Upload to System
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Create Schedule Modal (Metadata Only) -->
+                <div id="create-schedule-modal" class="modal">
+                    <div class="modal-content" style="max-width: 600px;">
+                        <div class="modal-header">
+                            <div>
+                                <h2 style="margin: 0; font-size: 1.5rem;">Create New Schedule Entry</h2>
+                                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Initialize a
+                                    digital schedule template for selected academic units.</p>
+                            </div>
+                            <span class="close-create-schedule-modal material-symbols-outlined"
+                                style="cursor: pointer; color: var(--text-muted);">close</span>
+                        </div>
+                        <div class="modal-body" style="padding-top: 10px;">
+                            <form id="create-schedule-form">
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label for="create-schedule-faculty-input"
+                                        style="font-weight: 600; display: block; margin-bottom: 8px;">Faculty</label>
+                                    <select id="create-schedule-faculty-input" class="filter-dropdown"
+                                        style="width: 100%;" required>
+                                        <option value="" disabled selected hidden>Select Faculty</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="create-schedule-department-wrapper"
+                                    style="margin-bottom: 20px; display: none;">
+                                    <label for="create-schedule-department-input"
+                                        style="font-weight: 600; display: block; margin-bottom: 8px;">Department</label>
+                                    <select id="create-schedule-department-input" class="filter-dropdown"
+                                        style="width: 100%;" required>
+                                        <option value="" disabled selected hidden>Select Department</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="create-schedule-year-wrapper"
+                                    style="margin-bottom: 20px; display: none;">
+                                    <label for="create-schedule-year-input"
+                                        style="font-weight: 600; display: block; margin-bottom: 8px;">Academic
+                                        Year</label>
+                                    <select id="create-schedule-year-input" name="academic_year" required
+                                        class="filter-dropdown" style="width: 100%;">
+                                        <option value="" disabled selected hidden>Select Year</option>
+                                        <option value="1">Year 1</option>
+                                        <option value="2">Year 2</option>
+                                        <option value="3">Year 3</option>
+                                        <option value="4">Year 4</option>
+                                        <option value="5">Year 5</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="create-schedule-section-wrapper"
+                                    style="margin-bottom: 20px; display: none;">
+                                    <label for="create-schedule-section-input"
+                                        style="font-weight: 600; display: block; margin-bottom: 8px;">Section</label>
+                                    <select id="create-schedule-section-input" name="section" required
+                                        class="filter-dropdown" style="width: 100%;">
+                                        <option value="" disabled selected hidden>Select Section</option>
+                                        <option value="A">Section A</option>
+                                        <option value="B">Section B</option>
+                                        <option value="C">Section C</option>
+                                        <option value="D">Section D</option>
+                                        <option value="E">Section E</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-actions"
+                                    style="margin-top: 30px; display: flex; gap: 12px; justify-content: flex-end;">
+                                    <button type="button" class="btn btn-secondary close-create-schedule-modal-btn"
+                                        style="padding: 10px 20px; border-radius: 10px;">Cancel</button>
+                                    <button type="submit" id="submit-create-schedule-btn" class="btn btn-primary"
+                                        style="padding: 10px 30px; border-radius: 10px;">
+                                        <span class="material-symbols-outlined" style="font-size: 1.2rem;">add</span>
+                                        Create Schedule
                                     </button>
                                 </div>
                             </form>

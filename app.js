@@ -11,6 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let allInstitutions = [];
     let usersData = [];
 
+    let selectedScheduleFaculties = ["All Faculties"];
+    let selectedScheduleDepartments = ["All Departments"];
+
+    let selectedCreateScheduleFaculties = ["All Faculties"];
+    let selectedCreateScheduleDepartments = ["All Departments"];
+
     function checkAuth() {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -151,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeScheduleModalBtns = document.querySelectorAll('.close-schedule-modal, .close-schedule-modal-btn');
 
     const quickUploadBtn = document.getElementById('quick-action-upload-schedule');
+    const quickCreateBtn = document.getElementById('quick-action-create-schedule');
     const sectionUploadBtn = document.getElementById('section-action-upload-schedule');
 
     const openScheduleModalHandler = async () => {
@@ -160,6 +167,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (openScheduleModalBtn) openScheduleModalBtn.addEventListener('click', openScheduleModalHandler);
     if (quickUploadBtn) quickUploadBtn.addEventListener('click', openScheduleModalHandler);
+    if (quickCreateBtn) quickCreateBtn.addEventListener('click', () => {
+        if (typeof openCreateScheduleModalHandler === 'function') openCreateScheduleModalHandler();
+    });
     if (sectionUploadBtn) sectionUploadBtn.addEventListener('click', openScheduleModalHandler);
 
     closeScheduleModalBtns.forEach(btn => {
@@ -316,21 +326,95 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    let selectedScheduleFaculties = ["All Faculties"];
-    let selectedScheduleDepartments = ["All Departments"];
+    // Create Schedule Modal Logic
+    const createScheduleModal = document.getElementById('create-schedule-modal');
+    const openCreateScheduleModalBtn = document.getElementById('open-create-schedule-modal');
+    const closeCreateScheduleModalBtns = document.querySelectorAll('.close-create-schedule-modal, .close-create-schedule-modal-btn');
+
+    const openCreateScheduleModalHandler = async () => {
+        if (createScheduleModal) createScheduleModal.classList.add('show');
+
+        // Reset visibility for progressive disclosure
+        document.getElementById('create-schedule-department-wrapper').style.display = 'none';
+        document.getElementById('create-schedule-year-wrapper').style.display = 'none';
+        document.getElementById('create-schedule-section-wrapper').style.display = 'none';
+
+        await populateCreateScheduleDropdowns();
+    };
+
+    if (openCreateScheduleModalBtn) openCreateScheduleModalBtn.addEventListener('click', openCreateScheduleModalHandler);
+
+    closeCreateScheduleModalBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (createScheduleModal) createScheduleModal.classList.remove('show');
+        });
+    });
+
+    window.addEventListener('click', (e) => {
+        if (createScheduleModal && e.target === createScheduleModal) {
+            createScheduleModal.classList.remove('show');
+        }
+    });
+
+    const createScheduleForm = document.getElementById('create-schedule-form');
+    if (createScheduleForm) {
+        createScheduleForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submit-create-schedule-btn');
+            const year = document.getElementById('create-schedule-year-input').value;
+            const section = document.getElementById('create-schedule-section-input').value;
+            const deptName = selectedCreateScheduleDepartments.length > 0 ? selectedCreateScheduleDepartments[0] : 'Unknown Dept';
+
+            // Auto-generate title: "department + year + section"
+            const generatedTitle = `${deptName} - Year ${year} - Section ${section}`;
+
+            try {
+                submitBtn.disabled = true;
+
+                const formData = new FormData();
+                formData.append('title', generatedTitle);
+                formData.append('type', 'class'); // Always class schedule
+                formData.append('academic_years', JSON.stringify([year]));
+                formData.append('faculties', JSON.stringify(selectedCreateScheduleFaculties));
+                formData.append('departments', JSON.stringify(selectedCreateScheduleDepartments));
+
+                const response = await authFetch(`${API_BASE_URL}/schedules/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('Schedule created successfully!');
+                    createScheduleModal.classList.remove('show');
+                    createScheduleForm.reset();
+                    fetchSchedules();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                alert('Error creating schedule: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+    }
 
     function renderTags(tagsArray, containerId, type) {
         const container = document.getElementById(containerId);
         if (!container) return;
         container.innerHTML = '';
         tagsArray.forEach(tagText => {
-            // Check if tag is 'All ...', typically we can remove it or keep it depending on preference.
-            // Requirement says "when selected it should be displayed as a list with an 'x' to remove it"
             let displayName = tagText;
-            if (type === 'faculty' && tagText !== 'All Faculties') {
+            // Handle both regular and create variants
+            const isFaculty = type === 'faculty' || type === 'create-faculty';
+            const isDept = type === 'department' || type === 'create-department';
+
+            if (isFaculty && tagText !== 'All Faculties') {
                 const found = allFaculties.find(af => af.id == tagText || af.name == tagText);
                 if (found) displayName = found.name;
-            } else if (type === 'department' && tagText !== 'All Departments') {
+            } else if (isDept && tagText !== 'All Departments') {
                 const found = allDepartments.find(ad => ad.id == tagText || ad.name == tagText);
                 if (found) displayName = found.name;
             }
@@ -382,6 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .map(d => d.name || d.id)];
             selectedScheduleDepartments = selectedScheduleDepartments.filter(dept => validDeptNames.includes(dept));
             renderTags(selectedScheduleDepartments, 'schedule-department-tags', 'department');
+            setupSearchableSelect('schedule-department-container', false, true);
         }
     }
 
@@ -391,8 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const facSelect = document.getElementById('schedule-faculty-input');
             if (selectedScheduleFaculties.length === 0) {
                 if (facSelect) facSelect.value = 'All Faculties';
-            } else if (facSelect) {
-                facSelect.value = selectedScheduleFaculties[selectedScheduleFaculties.length - 1];
+                selectedScheduleFaculties = ['All Faculties'];
             }
             renderTags(selectedScheduleFaculties, 'schedule-faculty-tags', 'faculty');
             updateScheduleDepartmentsList();
@@ -401,10 +485,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const deptSelect = document.getElementById('schedule-department-input');
             if (selectedScheduleDepartments.length === 0) {
                 if (deptSelect) deptSelect.value = 'All Departments';
-            } else if (deptSelect) {
-                deptSelect.value = selectedScheduleDepartments[selectedScheduleDepartments.length - 1];
+                selectedScheduleDepartments = ['All Departments'];
             }
             renderTags(selectedScheduleDepartments, 'schedule-department-tags', 'department');
+        } else if (type === 'create-faculty') {
+            selectedCreateScheduleFaculties = selectedCreateScheduleFaculties.filter(v => v !== tagText);
+            const facSelect = document.getElementById('create-schedule-faculty-input');
+            if (selectedCreateScheduleFaculties.length === 0) {
+                if (facSelect) facSelect.value = 'All Faculties';
+                selectedCreateScheduleFaculties = ['All Faculties'];
+            }
+            renderTags(selectedCreateScheduleFaculties, 'create-schedule-faculty-tags', 'create-faculty');
+            updateCreateScheduleDepartmentsList();
+        } else if (type === 'create-department') {
+            selectedCreateScheduleDepartments = selectedCreateScheduleDepartments.filter(v => v !== tagText);
+            const deptSelect = document.getElementById('create-schedule-department-input');
+            if (selectedCreateScheduleDepartments.length === 0) {
+                if (deptSelect) deptSelect.value = 'All Departments';
+                selectedCreateScheduleDepartments = ['All Departments'];
+            }
+            renderTags(selectedCreateScheduleDepartments, 'create-schedule-department-tags', 'create-department');
         }
     }
 
@@ -434,6 +534,9 @@ document.addEventListener('DOMContentLoaded', () => {
         await updateScheduleDepartmentsList();
         renderTags(selectedScheduleFaculties, 'schedule-faculty-tags', 'faculty');
         renderTags(selectedScheduleDepartments, 'schedule-department-tags', 'department');
+
+        setupSearchableSelect('schedule-faculty-container', false, true);
+        setupSearchableSelect('schedule-department-container', false, true);
     }
     window.populateScheduleDropdowns = populateScheduleDropdowns;
 
@@ -471,6 +574,133 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 2. Dashboard Stats Updater
+    // Create Schedule Dropdown Logic
+    async function populateCreateScheduleDropdowns() {
+        const facSelect = document.getElementById('create-schedule-faculty-input');
+        if (facSelect) {
+            facSelect.innerHTML = '<option value="Loading...">Loading Faculties...</option>';
+            if (!allFaculties || allFaculties.length === 0) await fetchFaculties();
+
+            facSelect.innerHTML = '<option value="" disabled selected hidden>Select Faculty</option>';
+            allFaculties.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f.name;
+                opt.textContent = f.name;
+                facSelect.appendChild(opt);
+            });
+        }
+        selectedCreateScheduleFaculties = [];
+        selectedCreateScheduleDepartments = [];
+    }
+
+    async function updateCreateScheduleDepartmentsList() {
+        const deptSelect = document.getElementById('create-schedule-department-input');
+        if (!deptSelect) return;
+
+        deptSelect.innerHTML = '<option value="" disabled selected hidden>Select Department</option>';
+        if (Array.isArray(allDepartments) && allDepartments.length > 0) {
+            let filteredDepts = allDepartments;
+            if (selectedCreateScheduleFaculties.length > 0) {
+                filteredDepts = allDepartments.filter(d =>
+                    d.faculty_name && selectedCreateScheduleFaculties.includes(d.faculty_name)
+                );
+            }
+            filteredDepts.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.name;
+                opt.textContent = d.name;
+                deptSelect.appendChild(opt);
+            });
+        }
+    }
+
+    const createFacInput = document.getElementById('create-schedule-faculty-input');
+    const createDeptWrapper = document.getElementById('create-schedule-department-wrapper');
+    const createYearWrapper = document.getElementById('create-schedule-year-wrapper');
+    const createSectionWrapper = document.getElementById('create-schedule-section-wrapper');
+
+    if (createFacInput) {
+        createFacInput.addEventListener('change', async (e) => {
+            const val = e.target.value;
+            if (val) {
+                selectedCreateScheduleFaculties = [val];
+                await updateCreateScheduleDepartmentsList();
+                // Show department
+                createDeptWrapper.style.display = 'block';
+                // Hide subsequent
+                createYearWrapper.style.display = 'none';
+                createSectionWrapper.style.display = 'none';
+                // Reset subsequent values
+                document.getElementById('create-schedule-department-input').value = "";
+                document.getElementById('create-schedule-year-input').value = "";
+                document.getElementById('create-schedule-section-input').value = "";
+            }
+        });
+    }
+
+    async function updateCreateScheduleSectionsList() {
+        if (selectedCreateScheduleDepartments.length === 0) return;
+        const deptName = selectedCreateScheduleDepartments[0];
+        const dept = allDepartments.find(d => d.name === deptName);
+        if (!dept) return;
+
+        const sectionSelect = document.getElementById('create-schedule-section-input');
+        if (!sectionSelect) return;
+
+        sectionSelect.innerHTML = '<option value="" disabled selected hidden>Loading...</option>';
+        try {
+            const response = await authFetch(`${API_BASE_URL}/departments/${dept.id}/sections`);
+            const result = await response.json();
+            if (result.success) {
+                sectionSelect.innerHTML = '<option value="" disabled selected hidden>Select Section</option>';
+                if (result.data.length > 0) {
+                    result.data.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s;
+                        opt.textContent = `Section ${s}`;
+                        sectionSelect.appendChild(opt);
+                    });
+                } else {
+                    sectionSelect.innerHTML = '<option value="" disabled selected hidden>No sections found</option>';
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching sections:', error);
+            sectionSelect.innerHTML = '<option value="" disabled selected hidden>Error loading sections</option>';
+        }
+    }
+
+    const createDeptInput = document.getElementById('create-schedule-department-input');
+    if (createDeptInput) {
+        createDeptInput.addEventListener('change', async (e) => {
+            const val = e.target.value;
+            if (val) {
+                selectedCreateScheduleDepartments = [val];
+                // Prefetch sections
+                await updateCreateScheduleSectionsList();
+                // Show year
+                createYearWrapper.style.display = 'block';
+                // Hide section
+                createSectionWrapper.style.display = 'none';
+                // Reset subsequent
+                document.getElementById('create-schedule-year-input').value = "";
+                document.getElementById('create-schedule-section-input').value = "";
+            }
+        });
+    }
+
+    const createYearInput = document.getElementById('create-schedule-year-input');
+    if (createYearInput) {
+        createYearInput.addEventListener('change', (e) => {
+            if (e.target.value) {
+                // Show section
+                createSectionWrapper.style.display = 'block';
+                // Note: Sections already fetched and populated at Department change
+                document.getElementById('create-schedule-section-input').value = "";
+            }
+        });
+    }
+
     async function updateDashboardStats() {
         try {
             const response = await authFetch(`${API_BASE_URL}/system/stats`);
@@ -861,20 +1091,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const facultyText = facultyDisplayNames.includes('All Faculties') ? 'All Faculties' : (facultyDisplayNames.length > 0 ? facultyDisplayNames.join(', ') : '-');
             const deptText = departmentDisplayNames.includes('All Departments') ? 'All Departments' : (departmentDisplayNames.length > 0 ? departmentDisplayNames.join(', ') : '-');
 
+            const isDigital = s.file_path === 'DIGITAL_ENTRY';
+
             html += `
                 <tr>
                     <td>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.2rem;">
-                                ${s.type === 'class' ? 'skillet' : 'assignment'}
+                                ${isDigital ? 'edit_calendar' : (s.type === 'class' ? 'skillet' : 'assignment')}
                             </span>
-                            <span style="text-transform: capitalize; font-weight: 600;">${s.type} Schedule</span>
+                            <div>
+                                <span style="text-transform: capitalize; font-weight: 600; display: block;">${s.type} Schedule</span>
+                                ${s.title ? `<span style="font-size: 0.75rem; color: var(--text-muted);">${s.title}</span>` : ''}
+                            </div>
                         </div>
                     </td>
                     <td>
-                        <div style="font-size: 0.85rem;">
-                            <strong>Fac:</strong> ${facultyText}<br>
-                            <strong>Dept:</strong> ${deptText}
+                        <div style="max-width: 250px;">
+                            <div style="font-size: 0.85rem; font-weight: 500;">${facultyText}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${deptText}</div>
                         </div>
                     </td>
                     <td>
@@ -883,9 +1118,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="text-muted">${date}</td>
                     <td style="text-align: center;">
                         <div style="display: flex; gap: 8px; justify-content: center;">
-                            <a href="${s.file_path}" target="_blank" class="btn btn-secondary btn-sm" title="View Document">
+                            ${isDigital ? `
+                            <button class="btn btn-secondary btn-sm" title="Edit Digital Schedule" onclick="alert('Digital schedule editor coming soon')">
+                                <span class="material-symbols-outlined" style="font-size: 1.1rem;">edit_calendar</span>
+                            </button>` : `
+                            <a href="${API_BASE_URL.replace('/api', '')}/${s.file_path.replace(/\\/g, '/')}" target="_blank" class="btn btn-secondary btn-sm" title="View Document">
                                 <span class="material-symbols-outlined" style="font-size: 1.1rem;">visibility</span>
-                            </a>
+                            </a>`}
                             <button class="btn btn-secondary btn-sm" onclick="alert('Delete functionality coming soon')" style="color: #ef4444;">
                                 <span class="material-symbols-outlined" style="font-size: 1.1rem;">delete</span>
                             </button>
@@ -1617,7 +1856,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { console.error(e); }
     }
 
-    function setupSearchableSelect(containerId, isMultiple = false) {
+    function setupSearchableSelect(containerId, isMultiple = false, clearOnSelect = false) {
         const container = document.getElementById(containerId);
         if (!container) return;
 
@@ -1625,12 +1864,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const dropdown = container.querySelector('.searchable-select-dropdown');
         const select = container.querySelector('select');
 
-        // Clear existing dropdown items
-        dropdown.innerHTML = '';
-
-        const options = Array.from(select.options).filter(opt => !opt.disabled);
+        // Prevent duplicate listener attachments
+        if (container.dataset.initialized) {
+            // Just update the dropdown content if already focused
+            if (document.activeElement === input) {
+                const options = Array.from(select.options).filter(opt => !opt.disabled);
+                const filter = input.value.toLowerCase();
+                const filtered = options.filter(opt => opt.text.toLowerCase().includes(filter));
+                dropdown.innerHTML = filtered.length ? filtered.map(opt => `
+                    <div class="searchable-select-option ${isMultiple && opt.selected ? 'selected' : ''}" data-value="${opt.value}">
+                        ${isMultiple ? `<input type="checkbox" ${opt.selected ? 'checked' : ''} style="margin-right: 8px;">` : ''}
+                        ${opt.text}
+                    </div>
+                `).join('') : '<div class="searchable-select-no-results">No matches found</div>';
+            }
+            return;
+        }
+        container.dataset.initialized = 'true';
 
         const renderDropdown = (filter = '') => {
+            const options = Array.from(select.options).filter(opt => !opt.disabled);
             const filtered = options.filter(opt => opt.text.toLowerCase().includes(filter.toLowerCase()));
             dropdown.innerHTML = filtered.length ? filtered.map(opt => `
                 <div class="searchable-select-option ${isMultiple && opt.selected ? 'selected' : ''}" data-value="${opt.value}">
@@ -1671,10 +1924,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         optionEl.classList.remove('selected');
                     }
                     updateSelectedDisplay();
-                    // Prevent input from losing focus or Dropdown closing so user can select more
                     input.focus();
                 } else {
-                    input.value = option.text;
+                    if (clearOnSelect) {
+                        input.value = '';
+                    } else {
+                        input.value = option.text;
+                    }
                     select.value = val;
                     dropdown.classList.remove('show');
                 }
