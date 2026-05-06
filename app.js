@@ -106,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchFaculties();
         fetchInstitutions();
         fetchSchedules();
+        fetchCalendars();
         updateDashboardStats();
         fetchLogs();
     }
@@ -3188,11 +3189,237 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Add listener to fetch messages when navigating to the tab
+    // Academic Calendar Modal Logic
+    const calendarModal = document.getElementById('upload-calendar-modal');
+    const openCalendarModalBtn = document.getElementById('open-upload-calendar-modal');
+    const closeCalendarModalBtns = document.querySelectorAll('.close-calendar-modal, .close-calendar-modal-btn');
+    const uploadCalendarForm = document.getElementById('upload-calendar-form');
+    const calendarDropZone = document.getElementById('calendar-drop-zone');
+    const calendarFileInput = document.getElementById('actual-calendar-file');
+    const calendarFileName = document.getElementById('calendar-file-name');
+
+    if (openCalendarModalBtn) {
+        openCalendarModalBtn.addEventListener('click', () => {
+            if (calendarModal) calendarModal.classList.add('show');
+        });
+    }
+
+    closeCalendarModalBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (calendarModal) calendarModal.classList.remove('show');
+        });
+    });
+
+    if (calendarDropZone && calendarFileInput) {
+        calendarDropZone.addEventListener('click', () => calendarFileInput.click());
+        calendarFileInput.addEventListener('change', () => {
+            const file = calendarFileInput.files[0];
+            if (file) {
+                calendarFileName.textContent = file.name;
+                calendarFileName.style.color = 'var(--primary)';
+                calendarDropZone.style.borderColor = 'var(--primary)';
+            }
+        });
+
+        // Simple drag and drop
+        calendarDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            calendarDropZone.style.borderColor = 'var(--primary)';
+            calendarDropZone.style.background = 'rgba(48, 86, 211, 0.05)';
+        });
+
+        calendarDropZone.addEventListener('dragleave', () => {
+            calendarDropZone.style.borderColor = '#cbd5e1';
+            calendarDropZone.style.background = '#f8fafc';
+        });
+
+        calendarDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                calendarFileInput.files = files;
+                calendarFileName.textContent = files[0].name;
+                calendarFileName.style.color = 'var(--primary)';
+            }
+        });
+    }
+
+    if (uploadCalendarForm) {
+        uploadCalendarForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submit-calendar-btn');
+            const progressContainer = document.getElementById('calendar-upload-progress-container');
+            const progressBar = document.getElementById('calendar-upload-progress-bar');
+            const progressPercent = document.getElementById('calendar-upload-percentage');
+            const statusText = document.getElementById('calendar-upload-status-text');
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('calendar-title-input').value);
+            formData.append('academic_year', document.getElementById('calendar-year-input').value);
+
+            const fileItem = calendarFileInput.files[0];
+            if (!fileItem) {
+                alert('Please select a calendar file to upload');
+                return;
+            }
+            formData.append('file', fileItem);
+
+            try {
+                submitBtn.disabled = true;
+                progressContainer.style.display = 'block';
+                statusText.textContent = 'Uploading Calendar...';
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `${API_BASE_URL}/calendars/upload`, true);
+                xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`);
+
+                xhr.upload.onprogress = (event) => {
+                    if (event.lengthComputable) {
+                        const percent = Math.round((event.loaded / event.total) * 100);
+                        progressBar.style.width = percent + '%';
+                        progressPercent.textContent = percent + '%';
+                    }
+                };
+
+                xhr.onload = function () {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (xhr.status >= 200 && xhr.status < 300 && response.success) {
+                            statusText.textContent = 'Upload Successful!';
+                            statusText.style.color = '#16a34a';
+                            setTimeout(() => {
+                                if (calendarModal) calendarModal.classList.remove('show');
+                                uploadCalendarForm.reset();
+                                progressContainer.style.display = 'none';
+                                submitBtn.disabled = false;
+                                calendarFileName.textContent = 'Supported: .pdf, .jpg, .png';
+                                fetchCalendars();
+                            }, 1200);
+                        } else {
+                            alert('Upload failed: ' + (response.message || 'Unknown error'));
+                            submitBtn.disabled = false;
+                            progressContainer.style.display = 'none';
+                        }
+                    } catch (e) {
+                        console.error('Json parse error:', xhr.responseText);
+                        alert('Upload failed: Server returned an invalid response. This often happens if the backend route is missing or the server is down.');
+                        submitBtn.disabled = false;
+                        progressContainer.style.display = 'none';
+                    }
+                };
+
+                xhr.onerror = () => { throw new Error('Network error during upload'); };
+                xhr.send(formData);
+
+            } catch (error) {
+                console.error('Calendar Upload Error:', error);
+                alert('Error: ' + error.message);
+                submitBtn.disabled = false;
+                progressContainer.style.display = 'none';
+            }
+        });
+    }
+
+    let allCalendars = [];
+    async function fetchCalendars() {
+        try {
+            const response = await authFetch(`${API_BASE_URL}/calendars`);
+            const result = await response.json();
+            if (result.success) {
+                allCalendars = result.data;
+                renderCalendars();
+            }
+        } catch (error) {
+            console.error('Error fetching calendars:', error);
+        }
+    }
+
+    function renderCalendars() {
+        const container = document.getElementById('calendars-list-container');
+        if (!container) return;
+
+        if (allCalendars.length === 0) {
+            container.innerHTML = `
+                <div class="card" style="padding: 40px; text-align: center;">
+                    <span class="material-symbols-outlined" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 15px; display: block;">event_available</span>
+                    <h3 style="margin-bottom: 8px;">No Academic Calendars Found</h3>
+                    <p class="text-muted">Upload university calendars to share important dates with students and staff.</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div class="card table-card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Academic Calendar</th>
+                            <th>Year</th>
+                            <th>Uploaded By</th>
+                            <th>Upload Date</th>
+                            <th style="text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        allCalendars.forEach(cal => {
+            const date = new Date(cal.created_at).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric'
+            });
+
+            html += `
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="material-symbols-outlined" style="color: var(--primary);">calendar_month</span>
+                            <span style="font-weight: 600;">${cal.title}</span>
+                        </div>
+                    </td>
+                    <td><span class="badge" style="background: #e0f2fe; color: #0369a1;">${cal.academic_year}</span></td>
+                    <td class="text-muted">${cal.uploaded_by_name || 'Admin'}</td>
+                    <td class="text-muted">${date}</td>
+                    <td style="text-align: center;">
+                        <div style="display: flex; gap: 8px; justify-content: center;">
+                            <a href="${API_BASE_URL.replace('/api', '')}/${cal.file_path.replace(/\\/g, '/')}" target="_blank" class="btn btn-secondary btn-sm" title="View">
+                                <span class="material-symbols-outlined" style="font-size: 1.1rem;">visibility</span>
+                            </a>
+                            <button class="btn btn-secondary btn-sm" onclick="deleteCalendarHandler('${cal.id}')" style="color: #ef4444;">
+                                <span class="material-symbols-outlined" style="font-size: 1.1rem;">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `</tbody></table></div>`;
+        container.innerHTML = html;
+    }
+
+    async function deleteCalendarHandler(id) {
+        if (!confirm('Permanently delete this calendar?')) return;
+        try {
+            const response = await authFetch(`${API_BASE_URL}/calendars/${id}`, { method: 'DELETE' });
+            const result = await response.json();
+            if (result.success) {
+                fetchCalendars();
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Delete error:', error);
+        }
+    }
+    window.deleteCalendarHandler = deleteCalendarHandler;
+
+    // Add listener to fetch calendars when navigating to the tab
     navItems.forEach(item => {
         item.addEventListener('click', () => {
-            if (item.getAttribute('data-target') === 'system-messages') {
-                fetchSystemMessages();
+            const target = item.getAttribute('data-target');
+            if (target === 'academic-calendars') {
+                fetchCalendars();
             }
         });
     });

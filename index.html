@@ -778,17 +778,20 @@
                 <section id="academic-calendars" class="view-section">
                     <div class="section-header">
                         <h2>Academic Calendars</h2>
-                        <button class="btn btn-primary" onclick="alert('Calendar upload feature coming soon')">
+                        <button class="btn btn-primary" id="open-upload-calendar-modal">
                             <span class="material-symbols-outlined">upload</span>
                             Upload Calendar
                         </button>
                     </div>
-                    <div class="card" style="padding: 40px; text-align: center;">
-                        <span class="material-symbols-outlined"
-                            style="font-size: 3rem; color: var(--text-muted); margin-bottom: 15px; display: block;">event_available</span>
-                        <h3 style="margin-bottom: 8px;">Academic Calendar Overview</h3>
-                        <p class="text-muted">View and manage important dates, semester breaks, and holiday schedules.
-                        </p>
+                    <div id="calendars-list-container">
+                        <div class="card" style="padding: 40px; text-align: center;">
+                            <span class="material-symbols-outlined"
+                                style="font-size: 3rem; color: var(--text-muted); margin-bottom: 15px; display: block;">event_available</span>
+                            <h3 style="margin-bottom: 8px;">Academic Calendar Overview</h3>
+                            <p class="text-muted">View and manage important dates, semester breaks, and holiday
+                                schedules.
+                            </p>
+                        </div>
                     </div>
                 </section>
 
@@ -1650,6 +1653,83 @@
     </div>
 
     <!-- Online Users Modal -->
+    <!-- Upload Calendar Modal -->
+    <div id="upload-calendar-modal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div>
+                    <h2 style="margin: 0; font-size: 1.5rem;">Upload Academic Calendar</h2>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Upload the official
+                        university calendar (PDF or Image).</p>
+                </div>
+                <span class="close-calendar-modal material-symbols-outlined"
+                    style="cursor: pointer; color: var(--text-muted);">close</span>
+            </div>
+            <div class="modal-body" style="padding-top: 10px;">
+                <form id="upload-calendar-form" enctype="multipart/form-data">
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="calendar-title-input"
+                            style="font-weight: 600; display: block; margin-bottom: 8px;">Calendar Title</label>
+                        <input type="text" id="calendar-title-input" name="title"
+                            placeholder="e.g. 2025/26 Academic Year Calendar" required
+                            style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="font-weight: 600; display: block; margin-bottom: 8px;">Academic Year</label>
+                        <select id="calendar-year-input" name="academic_year" class="filter-dropdown"
+                            style="width: 100%;" required>
+                            <option value="" disabled selected hidden>Select Year</option>
+                            <option value="2024/25">2024/25</option>
+                            <option value="2025/26">2025/26</option>
+                            <option value="2026/27">2026/27</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-weight: 600; display: block; margin-bottom: 8px;">Calendar File</label>
+                        <div id="calendar-drop-zone"
+                            style="border: 2px dashed #cbd5e1; padding: 30px; text-align: center; border-radius: 16px; background: #f8fafc; cursor: pointer; transition: all 0.3s ease;">
+                            <span class="material-symbols-outlined"
+                                style="font-size: 3rem; color: var(--primary); margin-bottom: 12px; display: block;">upload_file</span>
+                            <p style="font-weight: 600; color: var(--text-dark); margin: 0;">Click or Drag Calendar File
+                            </p>
+                            <p id="calendar-file-name"
+                                style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">
+                                Supported: .pdf, .jpg, .png</p>
+                        </div>
+                        <input type="file" id="actual-calendar-file" name="file" accept=".pdf, .jpg, .png" required
+                            style="display: none;">
+                    </div>
+
+                    <div id="calendar-upload-progress-container" style="display: none; margin-top: 20px;">
+                        <div
+                            style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem;">
+                            <span id="calendar-upload-status-text">Uploading...</span>
+                            <span id="calendar-upload-percentage">0%</span>
+                        </div>
+                        <div style="height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden;">
+                            <div id="calendar-upload-progress-bar"
+                                style="height: 100%; width: 0%; background: var(--primary); transition: width 0.3s ease;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions"
+                        style="margin-top: 30px; display: flex; gap: 12px; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary close-calendar-modal-btn"
+                            style="padding: 10px 20px; border-radius: 10px;">Cancel</button>
+                        <button type="submit" id="submit-calendar-btn" class="btn btn-primary"
+                            style="padding: 10px 30px; border-radius: 10px;">
+                            <span class="material-symbols-outlined" style="font-size: 1.2rem;">cloud_upload</span>
+                            Upload Calendar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div id="online-users-modal" class="modal">
         <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
