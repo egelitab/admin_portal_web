@@ -955,18 +955,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             if (result.success) {
                 const stats = result.data;
-                const statValues = document.querySelectorAll('.stat-value');
-                if (statValues.length >= 4) {
-                    statValues[0].textContent = stats.totalUsers.toLocaleString();
-                    statValues[1].textContent = stats.activeSessions;
+
+                // Update by ID for precision
+                const totalUsersValue = document.getElementById('total-users-value');
+                if (totalUsersValue) totalUsersValue.textContent = stats.totalUsers.toLocaleString();
+
+                const activeUsersValue = document.getElementById('active-users-value');
+                if (activeUsersValue) {
+                    activeUsersValue.innerHTML = `${stats.activeSessions} <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">users online now</span>`;
                 }
-
-                // Update specific elements by ID if they exist
-                const totalUsersEl = document.querySelector('.stats-grid .stat-card:nth-child(1) .stat-value');
-                if (totalUsersEl) totalUsersEl.textContent = stats.totalUsers.toLocaleString();
-
-                const activeSessionsEl = document.querySelector('.stats-grid .stat-card:nth-child(2) .stat-value');
-                if (activeSessionsEl) activeSessionsEl.innerHTML = `${stats.activeSessions} <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">users online now</span>`;
 
                 // Update storage usage
                 updateDiskStorage(stats.storage);
@@ -1018,10 +1015,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Also update settings section stat card if it exists
-        const settingsStorageEl = document.querySelector('#settings .dashboard-grid:last-of-type .card span:last-child');
-        if (settingsStorageEl) {
-            settingsStorageEl.textContent = `${USED_STORAGE_GB} GB / ${TOTAL_STORAGE_GB} GB (${percentage}%)`;
-            const settingsBar = document.querySelector('#settings .dashboard-grid:last-of-type .card div:last-child div');
+        const settingsStorageText = document.getElementById('settings-storage-text');
+        if (settingsStorageText) {
+            settingsStorageText.textContent = `${USED_STORAGE_GB} GB / ${TOTAL_STORAGE_GB} GB (${percentage}%)`;
+            const settingsBar = document.getElementById('settings-storage-bar');
             if (settingsBar) settingsBar.style.width = `${percentage}%`;
         }
     };
@@ -1035,31 +1032,156 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const searchInput = document.getElementById('user-search');
     const roleFilter = document.getElementById('role-filter');
+    const statusFilter = document.getElementById('status-filter');
     const usersTableBody = document.getElementById('users-table-body');
     const paginationText = document.getElementById('pagination-text');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
 
+    // Dashboard Click Listeners
+    const totalUsersCard = document.getElementById('total-users-card');
+    const activeUsersCard = document.getElementById('active-users-card');
+
+    if (totalUsersCard) {
+        totalUsersCard.addEventListener('click', () => {
+            const usersTab = document.querySelector('.nav-item[data-target="users"]');
+            if (usersTab) {
+                usersTab.click();
+                if (statusFilter) statusFilter.value = 'all';
+                if (searchInput) searchInput.value = '';
+                filterUsers();
+            }
+        });
+    }
+
+    // Online Users Modal Logic
+    const onlineUsersModal = document.getElementById('online-users-modal');
+    const onlineUsersTableBody = document.getElementById('online-users-table-body');
+    const onlineUsersEmpty = document.getElementById('online-users-empty');
+    const onlineCountFooter = document.getElementById('online-count-footer');
+    const closeOnlineModalBtns = document.querySelectorAll('.close-online-users-modal, .close-online-users-modal-btn');
+
+    if (activeUsersCard) {
+        activeUsersCard.addEventListener('click', async () => {
+            // Force table state to loading while we fetch real active users
+            if (onlineCountFooter) onlineCountFooter.textContent = 'Loading precise online data...';
+
+            let realActiveUserIds = new Set();
+            try {
+                // Fetch recent logs to determine EXACTLY who is active
+                const logsRes = await authFetch(`${API_BASE_URL}/system/logs`);
+                const logsData = await logsRes.json();
+                if (logsData.success) {
+                    const activeTimeLimit = new Date(Date.now() - 15 * 60 * 1000); // 15 mins window
+                    logsData.data.forEach(log => {
+                        if (new Date(log.created_at) > activeTimeLimit && log.user_id) {
+                            realActiveUserIds.add(log.user_id);
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error("Error fetching real time active logs:", err);
+            }
+
+            // Include users derived from real API activity, along with any backend-flagged is_online 
+            const onlineUsers = usersData.filter(u => u.is_online || realActiveUserIds.has(u.id) || (u.isOnline && u.role.toLowerCase() === 'admin')); // Keep some admins online for demo
+
+            // Ensure we show any explicitly selected active users (if mocked for demo purposes)
+            // But if we found real users, prioritize them + students!
+            if (realActiveUserIds.size > 0) {
+                usersData.forEach(u => {
+                    if (realActiveUserIds.has(u.id)) {
+                        u.isOnline = true;
+                        if (!onlineUsers.includes(u)) onlineUsers.push(u);
+                    }
+                });
+            }
+
+            if (onlineUsersTableBody) {
+                onlineUsersTableBody.innerHTML = '';
+                if (onlineUsers.length === 0) {
+                    if (onlineUsersEmpty) onlineUsersEmpty.style.display = 'block';
+                    if (onlineUsersTableBody.closest('.table-card')) onlineUsersTableBody.closest('.table-card').style.display = 'none';
+                } else {
+                    if (onlineUsersEmpty) onlineUsersEmpty.style.display = 'none';
+                    if (onlineUsersTableBody.closest('.table-card')) onlineUsersTableBody.closest('.table-card').style.display = 'block';
+
+                    onlineUsers.forEach(user => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td style="padding-left: 20px;">
+                                <div class="user-info-cell">
+                                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=${user.avatarBg}&color=${user.avatarColor}&rounded=true" alt="Avatar" class="avatar-sm">
+                                    <span class="user-name">${user.name}</span>
+                                </div>
+                            </td>
+                            <td><span class="badge ${user.roleClass}">${user.role}</span></td>
+                            <td class="text-muted">${user.dept}</td>
+                            <td style="text-align: center;"><span class="badge status-online">Online</span></td>
+                        `;
+                        onlineUsersTableBody.appendChild(tr);
+                    });
+                }
+            }
+            if (onlineCountFooter) {
+                onlineCountFooter.textContent = `${onlineUsers.length} Users Online`;
+            }
+            if (onlineUsersModal) onlineUsersModal.classList.add('show');
+        });
+    }
+
+    closeOnlineModalBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (onlineUsersModal) onlineUsersModal.classList.remove('show');
+        });
+    });
+
+    window.addEventListener('click', (e) => {
+        if (onlineUsersModal && e.target === onlineUsersModal) {
+            onlineUsersModal.classList.remove('show');
+        }
+    });
+
     async function fetchUsers() {
         try {
+            // Determine real online users from logs first to avoid mocking
+            let realActiveUserIds = new Set();
+            try {
+                const logsRes = await authFetch(`${API_BASE_URL}/system/logs`);
+                const logsData = await logsRes.json();
+                if (logsData.success) {
+                    const activeTimeLimit = new Date(Date.now() - 15 * 60 * 1000);
+                    logsData.data.forEach(log => {
+                        if (new Date(log.created_at) > activeTimeLimit && log.user_id) {
+                            realActiveUserIds.add(log.user_id);
+                        }
+                    });
+                }
+            } catch (e) { console.error("Online status sync failed:", e); }
+
             const response = await authFetch(`${API_BASE_URL}/users`);
             const result = await response.json();
             if (result.success) {
-                usersData = result.data.map(u => ({
-                    id: u.id,
-                    name: `${u.first_name || ''} ${u.middle_name || ''} ${u.last_name || ''}`.replace(/\s+/g, ' ').trim() || 'Unknown',
-                    email: u.email,
-                    role: u.role ? (u.role.charAt(0).toUpperCase() + u.role.slice(1)) : 'Student',
-                    roleClass: u.role === 'admin' ? 'role-admin' : (u.role === 'instructor' ? 'role-instructor' : 'role-student'),
-                    dept: u.department_name || '-',
-                    faculty: u.faculty_name || '-',
-                    year: u.year || '-',
-                    section: u.section || '-',
-                    status: u.is_active ? 'Active' : 'Suspended',
-                    statusClass: u.is_active ? 'status-active' : 'status-suspended',
-                    avatarBg: 'dcfce7',
-                    avatarColor: '166534'
-                }));
+                usersData = result.data.map(u => {
+                    const isOnline = u.is_online || realActiveUserIds.has(u.id);
+                    return {
+                        id: u.id,
+                        name: `${u.first_name || ''} ${u.middle_name || ''} ${u.last_name || ''}`.replace(/\s+/g, ' ').trim() || 'Unknown',
+                        email: u.email,
+                        role: u.role ? (u.role.charAt(0).toUpperCase() + u.role.slice(1)) : 'Student',
+                        roleClass: u.role === 'admin' ? 'role-admin' : (u.role === 'instructor' ? 'role-instructor' : 'role-student'),
+                        dept: u.department_name || '-',
+                        faculty: u.faculty_name || '-',
+                        year: u.year || '-',
+                        section: u.section || '-',
+                        institutional_id: u.institutional_id || '',
+                        isOnline: isOnline,
+                        status: isOnline ? 'Online' : (u.is_active ? 'Active' : 'Suspended'),
+                        statusClass: isOnline ? 'status-online' : (u.is_active ? 'status-active' : 'status-suspended'),
+                        avatarBg: 'dcfce7',
+                        avatarColor: '166534'
+                    };
+                });
                 filterUsers();
             }
         } catch (error) {
@@ -1461,8 +1583,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetBtn = document.getElementById('reset-filters');
 
     function filterUsers() {
-        const query = searchInput.value.toLowerCase();
-        const role = roleFilter.value.toLowerCase();
+        const query = searchInput ? searchInput.value.toLowerCase() : '';
+        const role = roleFilter ? roleFilter.value.toLowerCase() : 'all';
+        const status = statusFilter ? statusFilter.value.toLowerCase() : 'all';
         const faculty = facultyFilter ? facultyFilter.value : 'all';
         const dept = deptFilter ? deptFilter.value : 'all';
         const year = yearFilter ? yearFilter.value : 'all';
@@ -1473,12 +1596,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 user.email.toLowerCase().includes(query) ||
                 (user.institutional_id && user.institutional_id.toLowerCase().includes(query));
             const matchRole = role === 'all' || user.role.toLowerCase() === role;
+            const matchStatus = status === 'all' ||
+                (status === 'online' && user.isOnline) ||
+                (status === 'active' && user.status === 'Active') ||
+                (status === 'suspended' && user.status === 'Suspended');
             const matchFaculty = faculty === 'all' || user.faculty === faculty;
             const matchDept = dept === 'all' || user.dept === dept;
             const matchYear = year === 'all' || String(user.year) === year;
             const matchSection = section === 'all' || user.section === section;
 
-            return matchSearch && matchRole && matchFaculty && matchDept && matchYear && matchSection;
+            return matchSearch && matchRole && matchStatus && matchFaculty && matchDept && matchYear && matchSection;
         });
 
         currentPage = 1;
@@ -1492,6 +1619,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (deptSectionFacultyFilter) {
         deptSectionFacultyFilter.addEventListener('change', renderDepartments);
     }
+
+    if (statusFilter) statusFilter.addEventListener('change', filterUsers);
 
     if (facultyFilter) {
         facultyFilter.addEventListener('change', () => {
@@ -1608,24 +1737,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function filterUsers() {
-        if (!searchInput || !roleFilter) return;
 
-        const searchTerm = searchInput.value.toLowerCase();
-        const roleTerm = roleFilter.value.toLowerCase();
-
-        filteredUsers = usersData.filter(user => {
-            const matchesSearch = user.name.toLowerCase().includes(searchTerm) ||
-                user.email.toLowerCase().includes(searchTerm) ||
-                user.dept.toLowerCase().includes(searchTerm);
-            const matchesRole = roleTerm === 'all' || user.role.toLowerCase() === roleTerm;
-            return matchesSearch && matchesRole;
-        });
-
-        // Reset to first page when filtering
-        currentPage = 1;
-        renderUserTable();
-    }
 
     window.navigateToUsersTabAndFilter = function (departmentName) {
         // Activate 'users' tab

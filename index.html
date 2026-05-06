@@ -129,25 +129,26 @@
                 <!-- Dashboard Section -->
                 <section id="dashboard" class="view-section active">
                     <div class="stats-grid">
-                        <div class="stat-card"
-                            style="background: var(--surface); color: var(--text-dark); border: 1px solid var(--border);">
+                        <div class="stat-card" id="total-users-card"
+                            style="background: var(--surface); color: var(--text-dark); border: 1px solid var(--border); cursor: pointer;">
                             <div class="stat-icon" style="background: rgba(48, 86, 211, 0.1); color: var(--primary);">
                                 <span class="material-symbols-outlined">group</span>
                             </div>
                             <div class="stat-info">
                                 <h3 style="color: var(--text-muted);">Total Users</h3>
-                                <p class="stat-value" style="color: var(--text-dark);">4,392</p>
+                                <p class="stat-value" id="total-users-value" style="color: var(--text-dark);">-</p>
                             </div>
                         </div>
-                        <div class="stat-card"
-                            style="background: var(--surface); color: var(--text-dark); border: 1px solid var(--border);">
+                        <div class="stat-card" id="active-users-card"
+                            style="background: var(--surface); color: var(--text-dark); border: 1px solid var(--border); cursor: pointer;">
                             <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
                                 <span class="material-symbols-outlined">sensors</span>
                             </div>
                             <div class="stat-info">
                                 <h3 style="color: var(--text-muted);">Active Sessions</h3>
-                                <p class="stat-value" style="color: var(--text-dark); font-size: 1.2rem;">154 <span
-                                        style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">users
+                                <p class="stat-value" id="active-users-value"
+                                    style="color: var(--text-dark); font-size: 1.2rem;">- <span
+                                        style="font-size: 0.8rem; font-weight: normal; color: var(-- text-muted);">users
                                         online now</span></p>
                             </div>
                         </div>
@@ -156,15 +157,16 @@
                             <div style="display: flex; justify-content: space-between; width: 100%;">
                                 <h3 style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;">Disk Storage
                                     (Course Materials)</h3>
-                                <span id="disk-percentage" style="font-size: 0.85rem; font-weight: 600;">68%</span>
+                                <span id="disk-percentage" style="font-size: 0.85rem; font-weight: 600;">-%</span>
                             </div>
                             <div
                                 style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin: 4px 0;">
                                 <div id="disk-progress"
-                                    style="width: 68%; height: 100%; background: var(--primary); border-radius: 4px;">
+                                    style="width: 0%; height: 100%; background: var(--primary); border-radius: 4px;">
                                 </div>
                             </div>
-                            <p id="disk-text" style="font-size: 0.85rem; color: var(--text-muted);">340GB / 500GB Used
+                            <p id="disk-text" style="font-size: 0.85rem; color: var(--text-muted);">Loading storage
+                                data...
                             </p>
                             <p id="storage-breakdown"
                                 style="font-size: 0.75rem; color: var(--primary); margin-top: 2px; font-weight: 500;">
@@ -180,8 +182,9 @@
                                         class="status-indicator"
                                         style="display: inline-block; margin-right: 6px;"></span>Healthy</span>
                             </div>
-                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Last Backup: 2h
-                                ago</p>
+                            <p id="last-backup-time"
+                                style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Last Backup: -
+                            </p>
                         </div>
                     </div>
 
@@ -210,18 +213,10 @@
                                     <div style="width: 200px; height: 200px; position: relative;">
                                         <canvas id="departmentPieChart"></canvas>
                                     </div>
-                                    <div class="donut-legend"
+                                    <div class="donut-legend" id="dept-donut-legend"
                                         style="margin-top: 15px; width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;">
-                                        <div class="legend-item"><span class="dot" style="background: #3056D3;"></span>
-                                            Computing (40%)</div>
-                                        <div class="legend-item"><span class="dot" style="background: #10B981;"></span>
-                                            Engineering (25%)</div>
-                                        <div class="legend-item"><span class="dot" style="background: #F59E0B;"></span>
-                                            Medicine (18%)</div>
-                                        <div class="legend-item"><span class="dot" style="background: #8B5CF6;"></span>
-                                            Social Science (10%)</div>
-                                        <div class="legend-item"><span class="dot" style="background: #EF4444;"></span>
-                                            Others (7%)</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted);">Loading departments...
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -285,53 +280,15 @@
                     <div class="card dashboard-card full-width mt-4">
                         <div class="card-header border-bottom">
                             <h3>Recent System Events</h3>
-                            <button class="btn btn-secondary btn-sm">View All</button>
+                            <button class="btn btn-secondary btn-sm"
+                                onclick="document.querySelector('.nav-item[data-target=\'system-logs\']').click()">View
+                                All</button>
                         </div>
-                        <div class="feed-list">
-                            <div class="feed-item">
-                                <div class="feed-icon"
-                                    style="background: rgba(48, 86, 211, 0.1); color: var(--primary);"><span
-                                        class="material-symbols-outlined">person_add</span></div>
-                                <div class="feed-content">
-                                    <p><strong>Admin</strong> added Instructor <strong>Hana</strong></p>
-                                    <span class="feed-time">10 minutes ago</span>
-                                </div>
-                            </div>
-                            <div class="feed-item">
-                                <div class="feed-icon"
-                                    style="background: rgba(48, 86, 211, 0.1); color: var(--primary);"><span
-                                        class="material-symbols-outlined">backup</span></div>
-                                <div class="feed-content">
-                                    <p><strong>Database backup</strong> triggered manually</p>
-                                    <span class="feed-time">2 hours ago</span>
-                                </div>
-                            </div>
-                            <div class="feed-item">
-                                <div class="feed-icon"
-                                    style="background: rgba(48, 86, 211, 0.1); color: var(--primary);"><span
-                                        class="material-symbols-outlined">edit_document</span></div>
-                                <div class="feed-content">
-                                    <p>Course <strong>CS101</strong> updated syllabus</p>
-                                    <span class="feed-time">4 hours ago</span>
-                                </div>
-                            </div>
-                            <div class="feed-item">
-                                <div class="feed-icon"
-                                    style="background: rgba(48, 86, 211, 0.1); color: var(--primary);"><span
-                                        class="material-symbols-outlined">check_circle</span></div>
-                                <div class="feed-content">
-                                    <p><strong>System maintenance</strong> completed successfully</p>
-                                    <span class="feed-time">Yesterday at 11:00 PM</span>
-                                </div>
-                            </div>
-                            <div class="feed-item">
-                                <div class="feed-icon"
-                                    style="background: rgba(48, 86, 211, 0.1); color: var(--primary);"><span
-                                        class="material-symbols-outlined">group</span></div>
-                                <div class="feed-content">
-                                    <p><strong>New student batch</strong> imported (240 records)</p>
-                                    <span class="feed-time">Yesterday at 2:30 PM</span>
-                                </div>
+                        <div class="feed-list" id="dashboard-feed-list">
+                            <div
+                                style="padding: 30px; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+                                <div class="spinner-sm" style="display: inline-block; margin-bottom: 10px;"></div>
+                                <p>Syncing latest system activities...</p>
                             </div>
                         </div>
                     </div>
@@ -400,6 +357,16 @@
                                     <option value="admin">Administrator</option>
                                 </select>
                             </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label
+                                    style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; display: block;">Status</label>
+                                <select id="status-filter" class="filter-dropdown" style="width: 100%;">
+                                    <option value="all">All Status</option>
+                                    <option value="online">Online Now</option>
+                                    <option value="active">Active</option>
+                                    <option value="suspended">Suspended</option>
+                                </select>
+                            </div>
                         </div>
                         <div style="margin-top: 15px; display: flex; gap: 15px; align-items: center;">
                             <div class="search-box" style="flex: 1; position: relative;">
@@ -450,8 +417,8 @@
 
                         <!-- Pagination Footer -->
                         <div class="pagination-footer">
-                            <span id="pagination-text" class="text-muted" style="font-size: 0.85rem;">Showing 1-10 of 22
-                                users</span>
+                            <span id="pagination-text" class="text-muted" style="font-size: 0.85rem;">Loading
+                                users...</span>
                             <div class="pagination-controls">
                                 <button id="prev-btn" class="btn btn-secondary btn-sm" disabled
                                     style="border-radius: 8px;">Previous</button>
@@ -559,7 +526,8 @@
                                     style="width: 100%; padding: 10px 10px 10px 40px; border-radius: 12px; border: 1px solid var(--border); outline: none;">
                             </div>
                             <button id="reset-course-filters" class="btn btn-secondary"
-                                style="white-space: nowrap;">Reset Filters</button>
+                                style="white-space: nowrap;">Reset
+                                Filters</button>
                         </div>
                     </div>
 
@@ -1255,21 +1223,23 @@
                                 <div style="margin-bottom: 24px;">
                                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                                         <strong>Course Completion Rate</strong>
-                                        <span>85%</span>
+                                        <span id="report-completion-text">-%</span>
                                     </div>
                                     <div
                                         style="width: 100%; height: 12px; background: #e2e8f0; border-radius: 6px; overflow: hidden;">
-                                        <div style="width: 85%; height: 100%; background: var(--success);"></div>
+                                        <div id="report-completion-bar"
+                                            style="width: 0%; height: 100%; background: var(--success);"></div>
                                     </div>
                                 </div>
                                 <div>
                                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                                         <strong>Active Users this Week</strong>
-                                        <span>92%</span>
+                                        <span id="report-active-users-text">-%</span>
                                     </div>
                                     <div
                                         style="width: 100%; height: 12px; background: #e2e8f0; border-radius: 6px; overflow: hidden;">
-                                        <div style="width: 92%; height: 100%; background: var(--primary);"></div>
+                                        <div id="report-active-users-bar"
+                                            style="width: 0%; height: 100%; background: var(--primary);"></div>
                                     </div>
                                 </div>
                             </div>
@@ -1300,11 +1270,12 @@
                                 system outages.</p>
                             <div style="margin-bottom: 8px; display: flex; justify-content: space-between;">
                                 <strong>Disk Space ( /dev/sda1 )</strong>
-                                <span>184 GB / 256 GB (72%)</span>
+                                <span id="settings-storage-text">- GB / - GB (-%)</span>
                             </div>
                             <div
                                 style="width: 100%; height: 12px; background: #e2e8f0; border-radius: 6px; overflow: hidden;">
-                                <div style="width: 72%; height: 100%; background: var(--primary);"></div>
+                                <div id="settings-storage-bar"
+                                    style="width: 0%; height: 100%; background: var(--primary);"></div>
                             </div>
                         </div>
                     </div>
@@ -1326,20 +1297,20 @@
                 <img id="drawer-avatar"
                     src="https://ui-avatars.com/api/?name=User&background=eff6ff&color=2563eb&rounded=true&size=100"
                     alt="User Avatar">
-                <h3 id="drawer-name">User Name</h3>
-                <p id="drawer-email" class="text-muted">user@university.edu</p>
-                <span id="drawer-role" class="badge">Role</span>
+                <h3 id="drawer-name">-</h3>
+                <p id="drawer-email" class="text-muted">-</p>
+                <span id="drawer-role" class="badge">-</span>
             </div>
 
             <div class="drawer-details">
                 <div class="detail-group">
                     <label>Department</label>
-                    <p id="drawer-dept">Department Name</p>
+                    <p id="drawer-dept">-</p>
                 </div>
                 <div class="detail-group" style="display: flex; align-items: center; justify-content: space-between;">
                     <div>
                         <label>Status</label>
-                        <p id="drawer-status">Active</p>
+                        <p id="drawer-status">-</p>
                     </div>
                     <div>
                         <label class="toggle-switch" title="Toggle Status">
@@ -1444,31 +1415,30 @@
             </div>
             <div class="modal-body">
                 <div class="profile-header" style="display: flex; gap: 20px; align-items: center; margin-bottom: 24px;">
-                    <img src="https://ui-avatars.com/api/?name=John+Doe&background=dcfce7&color=166534&rounded=true&size=80"
+                    <img id="profile-avatar"
+                        src="https://ui-avatars.com/api/?name=User&background=dcfce7&color=166534&rounded=true&size=80"
                         alt="Avatar">
                     <div>
-                        <h3 style="margin-bottom: 4px; font-size: 1.2rem;">John Doe</h3>
-                        <p class="text-muted">john.d@university.edu</p>
-                        <span class="badge role-student mt-2">Student</span>
+                        <h3 id="profile-display-name" style="margin-bottom: 4px; font-size: 1.2rem;">-</h3>
+                        <p id="profile-display-email" class="text-muted">-</p>
+                        <span id="profile-display-role" class="badge mt-2">-</span>
                     </div>
                 </div>
                 <form id="update-user-form">
                     <div class="form-group">
                         <label for="profile-name">Full Name</label>
-                        <input type="text" id="profile-name" value="John Doe" required>
+                        <input type="text" id="profile-name" value="" required>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="profile-department">Department</label>
                             <select id="profile-department" required>
-                                <option value="cs" selected>Computer Science</option>
-                                <option value="math">Mathematics</option>
-                                <option value="physics">Physics</option>
+                                <option value="">Select Department...</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="profile-phone">Phone Number</label>
-                            <input type="text" id="profile-phone" value="+1 (555) 123-4567">
+                            <input type="text" id="profile-phone" value="">
                         </div>
                     </div>
                     <div class="form-actions">
@@ -1524,45 +1494,41 @@
                         style="width: 80px; height: 80px; background: rgba(48, 86, 211, 0.1); color: var(--primary); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
                         <span class="material-symbols-outlined" style="font-size: 40px;">category</span>
                     </div>
-                    <h3 id="dept-detail-title" style="font-size: 1.5rem; margin-bottom: 5px;">Information System</h3>
-                    <p id="dept-detail-faculty" class="text-muted">Faculty of Computing</p>
+                    <h3 id="dept-detail-title" style="font-size: 1.5rem; margin-bottom: 5px;">-</h3>
+                    <p id="dept-detail-faculty" class="text-muted">-</p>
                 </div>
-
                 <div class="dept-detail-info-grid"
                     style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #f8fafc; padding: 25px; border-radius: 20px; border: 1px solid var(--border);">
                     <div class="info-item">
                         <label
-                            style="display: block; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 5px;">Person
-                            in Charge</label>
+                            style="display: block; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 5px;">Head
+                            of Department</label>
                         <p id="dept-detail-head"
                             style="font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
                             <span class="material-symbols-outlined"
                                 style="font-size: 1.2rem; color: var(--primary);">person</span>
-                            Dr. Abebe Kebede
+                            -
                         </p>
                     </div>
                     <div class="info-item">
                         <label
                             style="display: block; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 5px;">Description</label>
                         <p id="dept-detail-desc" style="font-size: 0.9rem; line-height: 1.5; color: var(--text-muted);">
-                            IS Department focused on software engineering and data systems.</p>
+                            -</p>
                     </div>
                     <div class="info-item">
                         <label
                             style="display: block; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 5px;">Total
                             Staff</label>
-                        <p id="dept-detail-staff-count" style="font-weight: 700; color: var(--primary);">12
-                            Professionals</p>
+                        <p id="dept-detail-staff-count" style="font-weight: 700; color: var(--primary);">-</p>
                     </div>
                     <div class="info-item">
                         <label
                             style="display: block; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 5px;">Total
                             Students</label>
-                        <p id="dept-detail-student-count" style="font-weight: 700; color: var(--primary);">450 Enrolled
-                        </p>
+                        <p id="dept-detail-student-count" style="font-weight: 700; color: var(--primary);">-</p>
                     </div>
                 </div>
-
                 <div class="dept-modal-actions" style="margin-top: 30px; display: flex; gap: 15px;">
                     <button id="view-dept-users-btn" class="btn btn-primary" style="flex: 1;">
                         <span class="material-symbols-outlined">group</span>
@@ -1597,66 +1563,7 @@
         </div>
     </div>
 
-    <!-- Department Details Modal -->
-    <div id="dept-details-modal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h2 id="dept-detail-name">Department Details</h2>
-                <span class="close-dept-modal" style="font-size: 24px; cursor: pointer;">&times;</span>
-            </div>
-            <div class="modal-body" style="padding: 30px;">
-                <div class="dept-detail-hero" style="text-align: center; margin-bottom: 30px;">
-                    <div
-                        style="width: 80px; height: 80px; background: rgba(48, 86, 211, 0.1); color: var(--primary); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
-                        <span class="material-symbols-outlined" style="font-size: 40px;">category</span>
-                    </div>
-                    <h3 id="dept-detail-title" style="font-size: 1.5rem; margin-bottom: 5px;">Information System</h3>
-                    <p id="dept-detail-faculty" class="text-muted">Faculty of Computing</p>
-                </div>
 
-                <div class="dept-detail-info-grid"
-                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #f8fafc; padding: 25px; border-radius: 20px; border: 1px solid var(--border);">
-                    <div class="info-item">
-                        <label
-                            style="display: block; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 5px;">Head
-                            of Department</label>
-                        <p id="dept-detail-head"
-                            style="font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
-                            <span class="material-symbols-outlined"
-                                style="font-size: 1.2rem; color: var(--primary);">person</span>
-                            Dr. Abebe Kebede
-                        </p>
-                    </div>
-                    <div class="info-item">
-                        <label
-                            style="display: block; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 5px;">Description</label>
-                        <p id="dept-detail-desc" style="font-size: 0.9rem; line-height: 1.5; color: var(--text-muted);">
-                        </p>
-                    </div>
-                    <div class="info-item">
-                        <label
-                            style="display: block; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 5px;">Total
-                            Instructors</label>
-                        <p id="dept-detail-staff-count" style="font-weight: 700; color: var(--primary);"></p>
-                    </div>
-                    <div class="info-item">
-                        <label
-                            style="display: block; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 5px;">Total
-                            Students</label>
-                        <p id="dept-detail-student-count" style="font-weight: 700; color: var(--primary);"></p>
-                    </div>
-                </div>
-
-                <div class="dept-modal-actions" style="margin-top: 30px; display: flex; gap: 15px;">
-                    <button id="view-dept-users-btn" class="btn btn-primary" style="flex: 1;">
-                        <span class="material-symbols-outlined">group</span>
-                        View Department Users
-                    </button>
-                    <button class="btn btn-secondary close-dept-modal-btn" style="flex: 0.5;">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Send Message Modal -->
     <div id="send-message-modal" class="modal">
@@ -1746,6 +1653,48 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Online Users Modal -->
+    <div id="online-users-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="material-symbols-outlined" style="color: #10b981;">sensors</span>
+                    <h2 style="margin: 0;">Users Online Now</h2>
+                </div>
+                <span class="close-online-users-modal" style="cursor: pointer; font-size: 1.5rem;">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="card table-card" style="box-shadow: none; border: 1px solid var(--border); padding: 0;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="padding-left: 20px;">Name</th>
+                                <th>Role</th>
+                                <th>Department</th>
+                                <th style="text-align: center;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="online-users-table-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="online-users-empty"
+                    style="display: none; text-align: center; padding: 40px; color: var(--text-muted);">
+                    <span class="material-symbols-outlined"
+                        style="font-size: 48px; margin-bottom: 12px;">group_off</span>
+                    <p>No users are currently online.</p>
+                </div>
+            </div>
+            <div class="modal-footer"
+                style="padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); background: #f8fafc; border-radius: 0 0 20px 20px;">
+                <span id="online-count-footer" class="text-muted" style="font-size: 0.85rem; font-weight: 500;">0 Users
+                    Online</span>
+                <button class="btn btn-secondary close-online-users-modal-btn" style="padding: 8px 20px;">Close</button>
             </div>
         </div>
     </div>

@@ -740,6 +740,21 @@ body {
     color: #7e22ce;
 }
 
+.status-online {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.status-online::before {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+}
+
 .status-active,
 .status-suspended,
 .status-pending {
