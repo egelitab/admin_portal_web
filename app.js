@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Digital Schedule Editor Logic
-    const digitalEditorModal = document.getElementById('digital-schedule-editor-modal');
+    const digitalEditorPage = document.getElementById('digital-schedule-editor-page');
     const editorTitle = document.getElementById('editor-schedule-title');
     const digitalScheduleBody = document.getElementById('digital-schedule-body');
     const closeEditorBtns = document.querySelectorAll('.close-editor-modal, .close-editor-modal-btn');
@@ -204,10 +204,22 @@ document.addEventListener('DOMContentLoaded', () => {
             editorTitle.textContent = `Schedule: ${s.title || 'Digital Template'}`;
         }
 
-        if (digitalEditorModal) digitalEditorModal.classList.add('show');
+        if (digitalEditorPage) {
+            viewSections.forEach(v => v.classList.remove('active'));
+            digitalEditorPage.classList.add('active');
+        }
         generateDigitalScheduleTable();
     };
     window.openDigitalScheduleEditor = openDigitalScheduleEditor;
+
+    function parseCourseData(rawVal) {
+        if (!rawVal) return { title: '', type: 'Lec' };
+        if (rawVal.includes(' | ')) {
+            const parts = rawVal.split(' | ');
+            return { title: parts[0], type: parts[1] };
+        }
+        return { title: rawVal, type: 'Lec' };
+    }
 
     function generateDigitalScheduleTable() {
         if (!digitalScheduleBody) return;
@@ -218,24 +230,43 @@ document.addEventListener('DOMContentLoaded', () => {
             "7:35 - 9:20",
             "9:25 - 12:05"
         ];
+        const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
         let html = '';
         const savedContent = currentEditingSchedule ? (currentEditingSchedule.content || {}) : {};
 
-        timeSlots.forEach((time, index) => {
-            html += `
-                <tr>
-                    <td style="font-weight: 600; background: #f8fafc;">${time}</td>
-                    <td onclick="openCoursePicker(this)" style="cursor: pointer; position: relative; min-height: 50px; height: 50px; padding: 10px;" class="schedule-slot" data-slot="${index}-0">${savedContent[`${index}-0`] ? `<div style="font-size: 0.8rem; font-weight: 600; color: var(--primary); line-height: 1.2;">${savedContent[`${index}-0`]}</div>` : ''}</td>
-                    <td onclick="openCoursePicker(this)" style="cursor: pointer; position: relative; min-height: 50px; height: 50px; padding: 10px;" class="schedule-slot" data-slot="${index}-1">${savedContent[`${index}-1`] ? `<div style="font-size: 0.8rem; font-weight: 600; color: var(--primary); line-height: 1.2;">${savedContent[`${index}-1`]}</div>` : ''}</td>
-                    <td onclick="openCoursePicker(this)" style="cursor: pointer; position: relative; min-height: 50px; height: 50px; padding: 10px;" class="schedule-slot" data-slot="${index}-2">${savedContent[`${index}-2`] ? `<div style="font-size: 0.8rem; font-weight: 600; color: var(--primary); line-height: 1.2;">${savedContent[`${index}-2`]}</div>` : ''}</td>
-                    <td onclick="openCoursePicker(this)" style="cursor: pointer; position: relative; min-height: 50px; height: 50px; padding: 10px;" class="schedule-slot" data-slot="${index}-3">${savedContent[`${index}-3`] ? `<div style="font-size: 0.8rem; font-weight: 600; color: var(--primary); line-height: 1.2;">${savedContent[`${index}-3`]}</div>` : ''}</td>
-                    <td onclick="openCoursePicker(this)" style="cursor: pointer; position: relative; min-height: 50px; height: 50px; padding: 10px;" class="schedule-slot" data-slot="${index}-4">${savedContent[`${index}-4`] ? `<div style="font-size: 0.8rem; font-weight: 600; color: var(--primary); line-height: 1.2;">${savedContent[`${index}-4`]}</div>` : ''}</td>
-                </tr>
-            `;
+        days.forEach((dayName, dayIndex) => {
+            let rowHtml = `<tr>\n                    <td style="font-weight: 600; background: #f8fafc;">${dayName}</td>`;
+            timeSlots.forEach((time, slotIndex) => {
+                const rawVal = savedContent[`${slotIndex}-${dayIndex}`];
+                let cellHtml = '';
+                if (rawVal) {
+                    const parsed = parseCourseData(rawVal);
+                    cellHtml = `
+                        <div class="course-name" style="font-size: 0.8rem; font-weight: 600; color: var(--primary); line-height: 1.2; margin-bottom: 4px;">${parsed.title}</div>
+                        <span class="course-type-tag badge" onclick="event.stopPropagation(); window.toggleCourseType(this);" style="cursor: pointer; display: inline-block; background: ${parsed.type === 'Lec' ? '#e0e7ff' : '#dcfce7'}; color: ${parsed.type === 'Lec' ? '#3730a3' : '#166534'}; padding: 2px 6px; font-size: 0.7rem; border-radius: 4px;">${parsed.type}</span>
+                    `;
+                }
+                rowHtml += `\n                    <td onclick="openCoursePicker(this)" style="cursor: pointer; position: relative; min-height: 50px; height: 50px; padding: 10px; vertical-align: top;" class="schedule-slot" data-slot="${slotIndex}-${dayIndex}">${cellHtml}</td>`;
+            });
+            rowHtml += `\n                </tr>`;
+            html += rowHtml;
         });
         digitalScheduleBody.innerHTML = html;
     }
+
+    window.toggleCourseType = function (tagEl) {
+        const currentType = tagEl.innerText.trim();
+        if (currentType === 'Lec') {
+            tagEl.innerText = 'Lab';
+            tagEl.style.background = '#dcfce7';
+            tagEl.style.color = '#166534';
+        } else {
+            tagEl.innerText = 'Lec';
+            tagEl.style.background = '#e0e7ff';
+            tagEl.style.color = '#3730a3';
+        }
+    };
 
     async function saveDigitalScheduleContent() {
         if (!currentEditingSchedule) return;
@@ -250,9 +281,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const content = {};
             slots.forEach(slot => {
                 const slotKey = slot.dataset.slot;
-                const courseName = slot.innerText.trim();
-                if (courseName) {
-                    content[slotKey] = courseName;
+                const courseNameEl = slot.querySelector('.course-name');
+                const courseTypeEl = slot.querySelector('.course-type-tag');
+                if (courseNameEl) {
+                    const courseName = courseNameEl.innerText.trim();
+                    const courseType = courseTypeEl ? courseTypeEl.innerText.trim() : 'Lec';
+                    content[slotKey] = `${courseName} | ${courseType}`;
+                } else if (slot.innerText.trim()) {
+                    content[slotKey] = slot.innerText.trim();
                 }
             });
 
@@ -380,7 +416,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function selectCourseForCell(courseTitle, cell) {
         if (!cell) return;
-        cell.innerHTML = courseTitle ? `<div style="font-size: 0.8rem; font-weight: 600; color: var(--primary); line-height: 1.2;">${courseTitle}</div>` : '';
+        if (courseTitle) {
+            cell.innerHTML = `
+                <div class="course-name" style="font-size: 0.8rem; font-weight: 600; color: var(--primary); line-height: 1.2; margin-bottom: 4px;">${courseTitle}</div>
+                <span class="course-type-tag badge" onclick="event.stopPropagation(); window.toggleCourseType(this);" style="cursor: pointer; display: inline-block; background: #e0e7ff; color: #3730a3; padding: 2px 6px; font-size: 0.7rem; border-radius: 4px;">Lec</span>
+            `;
+        } else {
+            cell.innerHTML = '';
+        }
         const picker = document.getElementById('course-slot-picker');
         if (picker) picker.style.display = 'none';
     }
@@ -389,14 +432,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     closeEditorBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            if (digitalEditorModal) digitalEditorModal.classList.remove('show');
+            if (digitalEditorPage) {
+                digitalEditorPage.classList.remove('active');
+                const schedulesSection = document.getElementById('schedules');
+                if (schedulesSection) schedulesSection.classList.add('active');
+            }
         });
-    });
-
-    window.addEventListener('click', (e) => {
-        if (digitalEditorModal && e.target === digitalEditorModal) {
-            digitalEditorModal.classList.remove('show');
-        }
     });
 
     const uploadScheduleForm = document.getElementById('upload-schedule-form');
