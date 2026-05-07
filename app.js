@@ -153,6 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (createUserBtn) {
                     createUserBtn.style.display = target === 'users' ? 'flex' : 'none';
                 }
+
+                if (target === 'reports') {
+                    initReportsPage();
+                }
             }
         });
     });
@@ -164,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const quickUploadBtn = document.getElementById('quick-action-upload-schedule');
     const quickCreateBtn = document.getElementById('quick-action-create-schedule');
+    const quickReportBtn = document.getElementById('quick-action-generate-report');
     const sectionUploadBtn = document.getElementById('section-action-upload-schedule');
 
     const openScheduleModalHandler = async () => {
@@ -175,6 +180,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (quickUploadBtn) quickUploadBtn.addEventListener('click', openScheduleModalHandler);
     if (quickCreateBtn) quickCreateBtn.addEventListener('click', () => {
         if (typeof openCreateScheduleModalHandler === 'function') openCreateScheduleModalHandler();
+    });
+    if (quickReportBtn) quickReportBtn.addEventListener('click', () => {
+        const reportNavItem = document.querySelector('.nav-item[data-target="reports"]');
+        if (reportNavItem) reportNavItem.click();
     });
     if (sectionUploadBtn) sectionUploadBtn.addEventListener('click', openScheduleModalHandler);
 
@@ -1027,6 +1036,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     engagementChartInstance.data.labels = selectedData.labels;
                     engagementChartInstance.data.datasets[0].data = selectedData.data;
                     engagementChartInstance.update();
+                }
+
+                // --- Update Reports Section Analytics ---
+                const reportCompletionText = document.getElementById('report-completion-text');
+                if (reportCompletionText) {
+                    const rate = stats.completionRate || 0;
+                    reportCompletionText.textContent = rate + '%';
+                    const bar = document.getElementById('report-completion-bar');
+                    if (bar) bar.style.width = rate + '%';
+                }
+
+                const reportActiveUsersText = document.getElementById('report-active-users-text');
+                if (reportActiveUsersText) {
+                    const activePercent = stats.totalUsers > 0 ? Math.round((stats.activeSessions / stats.totalUsers) * 100) : 0;
+                    reportActiveUsersText.textContent = activePercent + '%';
+                    const bar = document.getElementById('report-active-users-bar');
+                    if (bar) bar.style.width = activePercent + '%';
                 }
             }
         } catch (error) {
@@ -3625,6 +3651,89 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    function initReportsPage() {
+        const exportUsersBtn = document.querySelector('#reports .btn-primary');
+        const exportEnrollmentsBtn = document.querySelector('#reports .btn-secondary');
+
+        if (exportUsersBtn && !exportUsersBtn.hasListener) {
+            exportUsersBtn.addEventListener('click', async () => {
+                try {
+                    exportUsersBtn.disabled = true;
+                    const originalHtml = exportUsersBtn.innerHTML;
+                    exportUsersBtn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 2s linear infinite; vertical-align: middle;">sync</span> Exporting...';
+
+                    const response = await authFetch(`${API_BASE_URL}/system/export/users`);
+                    const result = await response.json();
+
+                    if (result.success) {
+                        downloadCSV(result.data, 'user_activity_report.csv');
+                    } else {
+                        alert('Export failed: ' + result.message);
+                    }
+                    exportUsersBtn.innerHTML = originalHtml;
+                    exportUsersBtn.disabled = false;
+                } catch (error) {
+                    console.error('Export error:', error);
+                    alert('Export failed');
+                    exportUsersBtn.disabled = false;
+                }
+            });
+            exportUsersBtn.hasListener = true;
+        }
+
+        if (exportEnrollmentsBtn && !exportEnrollmentsBtn.hasListener) {
+            exportEnrollmentsBtn.addEventListener('click', async () => {
+                try {
+                    exportEnrollmentsBtn.disabled = true;
+                    const originalHtml = exportEnrollmentsBtn.innerHTML;
+                    exportEnrollmentsBtn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 2s linear infinite; vertical-align: middle;">sync</span> Exporting...';
+
+                    const response = await authFetch(`${API_BASE_URL}/system/export/enrollments`);
+                    const result = await response.json();
+
+                    if (result.success) {
+                        downloadCSV(result.data, 'course_enrollments_report.csv');
+                    } else {
+                        alert('Export failed: ' + result.message);
+                    }
+                    exportEnrollmentsBtn.innerHTML = originalHtml;
+                    exportEnrollmentsBtn.disabled = false;
+                } catch (error) {
+                    console.error('Export error:', error);
+                    alert('Export failed');
+                    exportEnrollmentsBtn.disabled = false;
+                }
+            });
+            exportEnrollmentsBtn.hasListener = true;
+        }
+    }
+
+    function downloadCSV(data, fileName) {
+        if (!data || !data.length) {
+            alert('No data available to export');
+            return;
+        }
+        const headers = Object.keys(data[0]);
+        const csvRows = [
+            headers.join(','),
+            ...data.map(row => headers.map(header => {
+                let val = row[header] === null ? '' : row[header];
+                if (typeof val === 'string') val = val.replace(/"/g, '""');
+                return `"${val}"`;
+            }).join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvRows], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', fileName);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 
     // Final Initialization
     if (localStorage.getItem('token')) {
