@@ -1730,6 +1730,96 @@
         </div>
     </div>
 
+    <!-- Ticket Detail Modal -->
+    <div id="ticket-detail-modal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="material-symbols-outlined" style="color: var(--primary);">confirmation_number</span>
+                    <h2 style="margin: 0;">Ticket Details</h2>
+                </div>
+                <span id="close-ticket-modal" class="material-symbols-outlined"
+                    style="cursor: pointer; color: var(--text-muted);">close</span>
+            </div>
+            <div class="modal-body" style="padding: 25px;">
+                <div id="ticket-info-container" style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="detail-row"
+                        style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                        <div>
+                            <label
+                                style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Ticket
+                                ID</label>
+                            <span id="detail-ticket-id"
+                                style="font-family: monospace; font-weight: 600; color: var(--text-dark); background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">-</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <label
+                                style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Status</label>
+                            <span id="detail-ticket-status" class="badge"
+                                style="background: #fef3c7; color: #d97706;">Open</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-row">
+                        <label
+                            style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 8px;">User
+                            Email</label>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="material-symbols-outlined"
+                                style="font-size: 1.2rem; color: var(--text-muted);">mail</span>
+                            <span id="detail-ticket-email" style="font-weight: 500; color: var(--text-dark);">-</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-row">
+                        <label
+                            style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 8px;">Subject</label>
+                        <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-dark);"
+                            id="detail-ticket-subject">-</div>
+                    </div>
+
+                    <div class="detail-row"
+                        style="background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+                        <label
+                            style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 10px;">Description
+                            / Payload</label>
+                        <pre id="detail-ticket-desc"
+                            style="white-space: pre-wrap; font-family: 'Inter', sans-serif; font-size: 0.9rem; line-height: 1.6; color: var(--text-dark); margin: 0;"></pre>
+                    </div>
+
+                    <div class="detail-row"
+                        style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 0.85rem;">
+                        <span class="material-symbols-outlined" style="font-size: 1rem;">schedule</span>
+                        <span>Created:</span>
+                        <span id="detail-ticket-date">-</span>
+                    </div>
+                </div>
+            </div>
+            <div id="profile-update-actions"
+                style="display: none; padding: 20px 25px; border-top: 1px solid var(--border); background: #f8fafc; gap: 12px; justify-content: flex-end;">
+                <button id="reject-profile-btn" class="btn btn-secondary"
+                    style="color: #ef4444; border-color: #ef4444;">
+                    <span class="material-symbols-outlined">cancel</span>
+                    Reject Changes
+                </button>
+                <button id="accept-profile-btn" class="btn btn-primary"
+                    style="background: #3b82f6; border-color: #3b82f6;">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    Accept & Apply
+                </button>
+            </div>
+            <div class="modal-footer"
+                style="padding: 20px 25px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px;">
+                <button class="btn btn-secondary close-ticket-modal-btn">Close</button>
+                <button id="resolve-ticket-btn" class="btn btn-primary"
+                    style="background: #10b981; border-color: #10b981;">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    Mark as Resolved
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="online-users-modal" class="modal">
         <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">

@@ -2455,6 +2455,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let tickets = [];
 
     const supportTableBody = document.getElementById('support-table-body');
+    let currentlyViewedTicketId = null;
     async function fetchTickets() {
         try {
             // Note: If you add support tickets to backend, change this to authFetch
@@ -2481,15 +2482,116 @@ document.addEventListener('DOMContentLoaded', () => {
         supportTableBody.innerHTML = '';
         tickets.forEach(ticket => {
             const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
             tr.innerHTML = `
                 <td><strong>${ticket.id.substring(0, 5)}</strong></td>
                 <td>${ticket.user_email || 'anonymous'}</td>
                 <td>${ticket.subject}</td>
                 <td><span class="badge" style="background: #fef3c7; color: #d97706;">${ticket.status}</span></td>
                 <td>${timeAgo(new Date(ticket.created_at || new Date()))}</td>
-                <td><button class="btn btn-secondary btn-sm">View Ticket</button></td>
+                <td><button class="btn btn-secondary btn-sm">View Details</button></td>
             `;
+            tr.addEventListener('click', () => openTicketDetail(ticket.id));
             supportTableBody.appendChild(tr);
+        });
+    }
+
+    // Modal elements for Ticket Detail
+    const ticketDetailModal = document.getElementById('ticket-detail-modal');
+    const closeTicketModalBtns = document.querySelectorAll('#close-ticket-modal, .close-ticket-modal-btn');
+
+    const openTicketDetail = (id) => {
+        currentlyViewedTicketId = id;
+        const ticket = tickets.find(t => t.id === id);
+        if (!ticket || !ticketDetailModal) return;
+
+        document.getElementById('detail-ticket-id').textContent = ticket.id;
+        document.getElementById('detail-ticket-status').textContent = ticket.status;
+        document.getElementById('detail-ticket-email').textContent = ticket.user_email || 'anonymous';
+        document.getElementById('detail-ticket-subject').textContent = ticket.subject;
+        document.getElementById('detail-ticket-desc').textContent = ticket.description || 'No detailed description provided.';
+        document.getElementById('detail-ticket-date').textContent = new Date(ticket.created_at).toLocaleString();
+
+        // Show/Hide Profile Update specific actions
+        const profileActions = document.getElementById('profile-update-actions');
+        if (profileActions) {
+            if (ticket.subject === 'Profile Update Request') {
+                profileActions.style.display = 'flex';
+            } else {
+                profileActions.style.display = 'none';
+            }
+        }
+
+        ticketDetailModal.classList.add('show');
+    };
+
+    // Profile Update Button Listeners
+    const acceptProfileBtn = document.getElementById('accept-profile-btn');
+    const rejectProfileBtn = document.getElementById('reject-profile-btn');
+
+    if (acceptProfileBtn) {
+        acceptProfileBtn.onclick = async () => {
+            const ticket = tickets.find(t => t.id === currentlyViewedTicketId);
+            if (!ticket) return;
+
+            try {
+                // Send Notification
+                await authFetch(`${API_BASE_URL}/system-messages/send`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        title: 'Profile Update Accepted',
+                        content: 'Your request to update your personal information has been reviewed and accepted by the administrator.',
+                        recipient_type: 'individual',
+                        recipients: [ticket.user_id]
+                    })
+                });
+
+                alert('Profile changes accepted and user has been notified!');
+                ticketDetailModal.classList.remove('show');
+            } catch (error) {
+                console.error('Error notifying user:', error);
+                alert('Changes accepted but failed to notify user.');
+            }
+        };
+    }
+
+    if (rejectProfileBtn) {
+        rejectProfileBtn.onclick = async () => {
+            const ticket = tickets.find(t => t.id === currentlyViewedTicketId);
+            if (!ticket) return;
+
+            if (confirm('Are you sure you want to reject these profile changes? The user will be notified.')) {
+                try {
+                    // Send Notification
+                    await authFetch(`${API_BASE_URL}/system-messages/send`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            title: 'Profile Update Rejected',
+                            content: 'Your request to update your personal information was rejected. Please contact the administrator for more details.',
+                            recipient_type: 'individual',
+                            recipients: [ticket.user_id]
+                        })
+                    });
+
+                    alert('Profile update request rejected and user has been notified.');
+                    ticketDetailModal.classList.remove('show');
+                } catch (error) {
+                    console.error('Error notifying user:', error);
+                    alert('Request rejected but failed to notify user.');
+                }
+            }
+        };
+    }
+
+    closeTicketModalBtns.forEach(btn => {
+        btn.addEventListener('click', () => ticketDetailModal.classList.remove('show'));
+    });
+
+    const resolveTicketBtn = document.getElementById('resolve-ticket-btn');
+    if (resolveTicketBtn) {
+        resolveTicketBtn.addEventListener('click', () => {
+            alert('Ticket marked as resolved (Simulation)');
+            ticketDetailModal.classList.remove('show');
         });
     }
 
