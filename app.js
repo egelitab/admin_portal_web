@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let allDepartments = [];
     let allFaculties = [];
     let allInstitutions = [];
+    let systemConfig = {}; // Store system-wide configuration
     let usersData = [];
     let allLogsData = [];
 
@@ -156,6 +157,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (target === 'reports') {
                     initReportsPage();
+                }
+
+                if (target === 'settings') {
+                    fetchSystemSettings();
                 }
             }
         });
@@ -1974,9 +1979,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
             if (selectedIds.length === 0) return;
 
-            const password = prompt("Enter admin password to delete:");
-            if (password !== "123456") {
-                alert("Incorrect password. Deletion canceled.");
+            const password = prompt("Enter Permission Password to delete users:");
+            const requiredPass = systemConfig.delete_user_password || "123456";
+
+            if (password !== requiredPass) {
+                alert("Incorrect permission password. Deletion canceled.");
                 return;
             }
 
@@ -3733,6 +3740,206 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    }
+
+    // --- 7. Settings & Maintenance Logic ---
+    async function fetchSystemSettings() {
+        try {
+            const response = await authFetch(`${API_BASE_URL}/system/config`);
+            const result = await response.json();
+
+            if (result.success) {
+                systemConfig = result.data;
+                const yearSel = document.getElementById('settings-academic-year');
+                const semSel = document.getElementById('settings-semester');
+                const maintToggle = document.getElementById('settings-maintenance-mode');
+                const regToggle = document.getElementById('settings-allow-registration');
+
+                const deletePassInput = document.getElementById('settings-delete-user-pass');
+                const backupLockInput = document.getElementById('settings-backup-lock-pass');
+
+                if (yearSel) yearSel.value = systemConfig.current_academic_year || '2025/26';
+                if (semSel) semSel.value = systemConfig.current_semester || '1';
+                if (maintToggle) maintToggle.checked = systemConfig.maintenance_mode === 'true';
+                if (regToggle) regToggle.checked = systemConfig.allow_registration === 'true';
+
+                if (deletePassInput) deletePassInput.value = systemConfig.delete_user_password || '';
+                if (backupLockInput) backupLockInput.value = systemConfig.backup_lock_password || '';
+            }
+        } catch (error) {
+            console.error('Error fetching settings:', error);
+        }
+    }
+
+    async function updateSystemSettings(updates) {
+        try {
+            const response = await authFetch(`${API_BASE_URL}/system/config`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates)
+            });
+            const result = await response.json();
+            if (result.success) {
+                // Update local config
+                Object.assign(systemConfig, updates);
+            }
+            return result.success;
+        } catch (error) {
+            console.error('Error updating settings:', error);
+            return false;
+        }
+    }
+
+    // Change Admin Password
+    const changeAdminPassBtn = document.getElementById('btn-change-admin-pass');
+    if (changeAdminPassBtn) {
+        changeAdminPassBtn.addEventListener('click', async () => {
+            const currentPassword = document.getElementById('settings-admin-old-pass').value;
+            const newPassword = document.getElementById('settings-admin-new-pass').value;
+
+            if (!currentPassword || !newPassword) {
+                alert('Please enter both current and new passwords');
+                return;
+            }
+
+            changeAdminPassBtn.disabled = true;
+            changeAdminPassBtn.textContent = 'Changing...';
+
+            try {
+                const response = await authFetch(`${API_BASE_URL}/users/change-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Admin password changed successfully');
+                    document.getElementById('settings-admin-old-pass').value = '';
+                    document.getElementById('settings-admin-new-pass').value = '';
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (err) {
+                alert('Connection error');
+            } finally {
+                changeAdminPassBtn.disabled = false;
+                changeAdminPassBtn.textContent = 'Update Login Password';
+            }
+        });
+    }
+
+    // Save Action Passwords
+    const saveActionPassBtn = document.getElementById('btn-save-action-passwords');
+    if (saveActionPassBtn) {
+        saveActionPassBtn.addEventListener('click', async () => {
+            const updates = {
+                delete_user_password: document.getElementById('settings-delete-user-pass').value,
+                backup_lock_password: document.getElementById('settings-backup-lock-pass').value
+            };
+
+            saveActionPassBtn.disabled = true;
+            saveActionPassBtn.textContent = 'Saving...';
+
+            const success = await updateSystemSettings(updates);
+            if (success) {
+                alert('Special action passwords updated successfully');
+            } else {
+                alert('Failed to update credentials');
+            }
+
+            saveActionPassBtn.disabled = false;
+            saveActionPassBtn.textContent = 'Save Action Passwords';
+        });
+    }
+
+    // Trigger Manual Backup
+    const backupBtn = document.getElementById('trigger-manual-backup');
+    if (backupBtn) {
+        backupBtn.addEventListener('click', async () => {
+            const icon = backupBtn.querySelector('.backup-icon');
+            const text = backupBtn.querySelector('.backup-text');
+            const msg = document.getElementById('backup-status-msg');
+
+            backupBtn.disabled = true;
+            if (icon) icon.style.animation = 'spin 1.5s linear infinite';
+            if (text) text.textContent = 'Processing Backup...';
+
+            try {
+                const response = await authFetch(`${API_BASE_URL}/system/backup`, { method: 'POST' });
+                const result = await response.json();
+
+                if (result.success) {
+                    if (msg) {
+                        msg.textContent = 'Backup completed successfully!';
+                        msg.style.display = 'block';
+                        msg.style.color = '#059669';
+                    }
+                }
+            } catch (err) {
+                if (msg) {
+                    msg.textContent = 'Backup failed: ' + err.message;
+                    msg.style.display = 'block';
+                    msg.style.color = '#dc2626';
+                }
+            } finally {
+                if (icon) icon.style.animation = 'none';
+                if (text) text.textContent = 'Trigger Manual Backup';
+                backupBtn.disabled = false;
+                setTimeout(() => { if (msg) msg.style.display = 'none'; }, 5000);
+            }
+        });
+    }
+
+    // Save Academic Config
+    const saveAcademicBtn = document.getElementById('save-academic-settings');
+    if (saveAcademicBtn) {
+        saveAcademicBtn.addEventListener('click', async () => {
+            const updates = {
+                current_academic_year: document.getElementById('settings-academic-year').value,
+                current_semester: document.getElementById('settings-semester').value
+            };
+            saveAcademicBtn.disabled = true;
+            saveAcademicBtn.textContent = 'Saving...';
+            const res = await updateSystemSettings(updates);
+            if (res) alert('Academic configuration saved.');
+            saveAcademicBtn.disabled = false;
+            saveAcademicBtn.textContent = 'Save Config';
+        });
+    }
+
+    // Maintenance Mode
+    const maintenanceToggle = document.getElementById('settings-maintenance-mode');
+    if (maintenanceToggle) {
+        maintenanceToggle.addEventListener('change', async () => {
+            await updateSystemSettings({ maintenance_mode: maintenanceToggle.checked });
+        });
+    }
+
+    // Registration Toggle
+    const registrationToggle = document.getElementById('settings-allow-registration');
+    if (registrationToggle) {
+        registrationToggle.addEventListener('change', async () => {
+            await updateSystemSettings({ allow_registration: registrationToggle.checked });
+        });
+    }
+
+    // Dark Mode Toggle
+    const darkModeToggle = document.getElementById('settings-dark-mode');
+    if (darkModeToggle) {
+        if (localStorage.getItem('admin-theme') === 'dark') {
+            document.body.classList.add('dark-theme');
+            darkModeToggle.checked = true;
+        }
+        darkModeToggle.addEventListener('change', () => {
+            if (darkModeToggle.checked) {
+                document.body.classList.add('dark-theme');
+                localStorage.setItem('admin-theme', 'dark');
+            } else {
+                document.body.classList.remove('dark-theme');
+                localStorage.setItem('admin-theme', 'light');
+            }
+        });
     }
 
     // Final Initialization

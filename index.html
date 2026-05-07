@@ -1254,17 +1254,20 @@
                         <h2>System Settings & Maintenance</h2>
                     </div>
                     <div class="dashboard-grid two-cols">
+                        <!-- Backup Card -->
                         <div class="card dashboard-card">
                             <h3 style="margin-bottom: 12px;">Manual Data Backup</h3>
                             <p class="text-muted" style="margin-bottom: 24px;">Trigger a full database and file system
                                 backup manually. This process may take a few minutes depending on data size.</p>
                             <button id="trigger-manual-backup" class="btn btn-primary"
-                                style="padding: 16px; font-size: 1.1rem; display: flex; gap: 12px; justify-content: center;">
+                                style="padding: 16px; font-size: 1.1rem; display: flex; gap: 12px; justify-content: center; width: 100%;">
                                 <span class="material-symbols-outlined backup-icon">backup</span>
                                 <span class="backup-text">Trigger Manual Backup</span>
                             </button>
                             <p id="backup-status-msg" style="margin-top: 16px; font-weight: 500; display: none;"></p>
                         </div>
+
+                        <!-- Storage Card -->
                         <div class="card dashboard-card">
                             <h3 style="margin-bottom: 12px;">Server Storage Status</h3>
                             <p class="text-muted" style="margin-bottom: 24px;">Monitor current disk usage to prevent
@@ -1277,6 +1280,144 @@
                                 style="width: 100%; height: 12px; background: #e2e8f0; border-radius: 6px; overflow: hidden;">
                                 <div id="settings-storage-bar"
                                     style="width: 0%; height: 100%; background: var(--primary);"></div>
+                            </div>
+                        </div>
+
+                        <!-- Academic Configuration -->
+                        <div class="card dashboard-card">
+                            <div class="card-header border-bottom" style="padding: 0 0 15px 0; margin-bottom: 20px;">
+                                <h3 style="margin: 0;">Academic Configuration</h3>
+                                <button class="btn btn-primary btn-sm" id="save-academic-settings"
+                                    style="padding: 6px 12px; font-size: 0.8rem;">Save Config</button>
+                            </div>
+                            <div style="display: grid; gap: 16px;">
+                                <div class="form-group">
+                                    <label style="font-weight: 600; display: block; margin-bottom: 8px;">Active Academic
+                                        Year</label>
+                                    <select id="settings-academic-year" class="filter-dropdown" style="width: 100%;">
+                                        <option value="2024/25">2024/25</option>
+                                        <option value="2025/26">2025/26</option>
+                                        <option value="2026/27">2026/27</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-weight: 600; display: block; margin-bottom: 8px;">Active
+                                        Semester</label>
+                                    <select id="settings-semester" class="filter-dropdown" style="width: 100%;">
+                                        <option value="1">1st Semester</option>
+                                        <option value="2">2nd Semester</option>
+                                        <option value="Summer">Summer Term (Optional)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- System Access -->
+                        <div class="card dashboard-card">
+                            <div class="card-header border-bottom" style="padding: 0 0 15px 0; margin-bottom: 20px;">
+                                <h3 style="margin: 0;">Security & Access Controls</h3>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 20px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong style="display: block; font-size: 1rem;">Maintenance Mode</strong>
+                                        <p class="text-muted" style="font-size: 0.8rem; margin: 4px 0 0 0;">Suspend all
+                                            non-admin portal activities.</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="settings-maintenance-mode">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong style="display: block; font-size: 1rem;">Open Student
+                                            Registration</strong>
+                                        <p class="text-muted" style="font-size: 0.8rem; margin: 4px 0 0 0;">Allow
+                                            students to join via university email.</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="settings-allow-registration">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Appearance -->
+                        <div class="card dashboard-card">
+                            <div class="card-header border-bottom" style="padding: 0 0 15px 0; margin-bottom: 20px;">
+                                <h3 style="margin: 0;">Identity & UI Preferences</h3>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 20px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong style="display: block; font-size: 1rem;">Dark Mode Interface</strong>
+                                        <p class="text-muted" style="font-size: 0.8rem; margin: 4px 0 0 0;">Toggle
+                                            between high-contrast and light views.</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="settings-dark-mode">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong style="display: block; font-size: 1rem;">Real-time Status Sync</strong>
+                                        <p class="text-muted" style="font-size: 0.8rem; margin: 4px 0 0 0;">
+                                            Automatically fetch portal updates (Experimental).</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="settings-auto-sync" checked disabled>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security & Credentials -->
+                        <div class="card dashboard-card">
+                            <div class="card-header border-bottom" style="padding: 0 0 15px 0; margin-bottom: 20px;">
+                                <h3 style="margin: 0;">Security & Credentials</h3>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 24px;">
+                                <!-- Admin Password -->
+                                <div style="border: 1px solid var(--border); padding: 16px; border-radius: 12px;">
+                                    <strong style="display: block; margin-bottom: 12px; font-size: 0.9rem;">Change Admin
+                                        Login Password</strong>
+                                    <div style="display: grid; gap: 12px;">
+                                        <input type="password" id="settings-admin-old-pass"
+                                            placeholder="Current Password" class="filter-dropdown" style="width: 100%;">
+                                        <input type="password" id="settings-admin-new-pass" placeholder="New Password"
+                                            class="filter-dropdown" style="width: 100%;">
+                                        <button class="btn btn-primary btn-sm" id="btn-change-admin-pass"
+                                            style="width: fit-content;">Update Login Password</button>
+                                    </div>
+                                </div>
+
+                                <!-- Action Passwords -->
+                                <div style="border: 1px solid var(--border); padding: 16px; border-radius: 12px;">
+                                    <strong style="display: block; margin-bottom: 12px; font-size: 0.9rem;">Special
+                                        Action Passwords</strong>
+                                    <div style="display: grid; gap: 16px;">
+                                        <div class="form-group">
+                                            <label style="font-size: 0.8rem; color: var(--text-muted);">Permission
+                                                Password for Deleting Users</label>
+                                            <input type="password" id="settings-delete-user-pass"
+                                                class="filter-dropdown" style="width: 100%;"
+                                                placeholder="Enter Delete Action Password">
+                                        </div>
+                                        <div class="form-group">
+                                            <label style="font-size: 0.8rem; color: var(--text-muted);">Encryption Key
+                                                for Backups (.sql Locking)</label>
+                                            <input type="password" id="settings-backup-lock-pass"
+                                                class="filter-dropdown" style="width: 100%;"
+                                                placeholder="Enter Backup Lock Key">
+                                        </div>
+                                        <button class="btn btn-secondary btn-sm" id="btn-save-action-passwords"
+                                            style="width: fit-content;">Save Action Passwords</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
