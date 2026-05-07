@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let allFaculties = [];
     let allInstitutions = [];
     let usersData = [];
+    let allLogsData = [];
 
     let selectedScheduleFaculties = ["All Faculties"];
     let selectedScheduleDepartments = ["All Departments"];
@@ -1719,6 +1720,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
 
             paginatedUsers.forEach(user => {
+                // Find latest IP from allLogsData
+                const userLogs = allLogsData.filter(l => l.user_id === user.id || l.email === user.email);
+                const lastIp = userLogs.length > 0 ? userLogs[0].ip_address : 'N/A';
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="checkbox-col"><input type="checkbox" class="row-checkbox" value="${user.id}"></td>
@@ -1731,6 +1736,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="text-muted">${user.email}</td>
                     <td><span class="badge ${user.roleClass}">${user.role}</span></td>
                     <td class="text-muted dept-cell" title="${user.dept}">${user.dept}</td>
+                    <td class="text-muted" style="font-family: monospace; font-size: 0.8rem;">${lastIp}</td>
                     <td><span class="badge ${user.statusClass}">${user.status}</span></td>
                 `;
                 usersTableBody.appendChild(tr);
@@ -2913,8 +2919,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await authFetch(`${API_BASE_URL}/system/logs`);
             const result = await response.json();
             if (result.success) {
-                renderActivityFeed(result.data);
-                renderLogsTable(result.data);
+                allLogsData = result.data;
+                renderActivityFeed(allLogsData);
+                renderLogsTable(allLogsData);
+                renderUserTable(); // Refresh user table with latest IP info
             }
         } catch (error) {
             console.error('Error fetching logs:', error);
@@ -2925,7 +2933,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const feedContainer = document.querySelector('.feed-list');
         if (!feedContainer) return;
 
-        feedContainer.innerHTML = logs.map(log => `
+        // Filter for system/admin events for the dashboard preview
+        const systemLogs = logs.filter(log => {
+            const user = usersData.find(u => u.id === log.user_id || u.email === log.email);
+            const role = user ? user.role.toLowerCase() : (log.email === 'system' || !log.email ? 'system' : 'unknown');
+            return role === 'admin' || role === 'system' || role === 'administrator';
+        });
+
+        if (systemLogs.length === 0) {
+            feedContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">No recent system events.</div>';
+            return;
+        }
+
+        feedContainer.innerHTML = systemLogs.slice(0, 10).map(log => `
             <div class="feed-item">
                 <div class="feed-icon" style="background: rgba(48, 86, 211, 0.1); color: var(--primary);">
                     <span class="material-symbols-outlined">${getIconForAction(log.action)}</span>
@@ -2942,7 +2962,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const logsTableBody = document.getElementById('logs-table-body');
         if (!logsTableBody) return;
 
-        logsTableBody.innerHTML = logs.map(log => `
+        const activeToggle = document.querySelector('#log-type-toggles .toggle-btn.active');
+        const logType = activeToggle ? activeToggle.getAttribute('data-type') : 'system';
+
+        const filteredLogs = logs.filter(log => {
+            const user = usersData.find(u => u.id === log.user_id || u.email === log.email);
+            const role = user ? user.role.toLowerCase() : (log.email === 'system' || !log.email ? 'system' : 'unknown');
+
+            if (logType === 'system') {
+                return role === 'admin' || role === 'system' || role === 'administrator';
+            } else {
+                return role === 'instructor' || role === 'student';
+            }
+        });
+
+        if (filteredLogs.length === 0) {
+            logsTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 60px; color: var(--text-muted);">
+                <span class="material-symbols-outlined" style="font-size: 2rem; display: block; margin-bottom: 10px; opacity: 0.5;">history</span>
+                No ${logType} activities recorded yet.</td></tr>`;
+            return;
+        }
+
+        logsTableBody.innerHTML = filteredLogs.map(log => `
             <tr>
                 <td class="text-muted">${new Date(log.created_at).toLocaleString()}</td>
                 <td>${log.email || 'system'}</td>
@@ -2951,6 +2992,65 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${log.action} on ${log.entity_type || 'system'}</td>
             </tr>
         `).join('');
+    }
+
+    // Log Type Toggle Listeners
+    const logTypeToggles = document.getElementById('log-type-toggles');
+    const exportLogsBtn = document.getElementById('export-logs-btn');
+
+    if (logTypeToggles) {
+        logTypeToggles.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                logTypeToggles.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderLogsTable(allLogsData);
+            });
+        });
+    }
+
+    if (exportLogsBtn) {
+        exportLogsBtn.addEventListener('click', () => {
+            const activeToggle = document.querySelector('#log-type-toggles .toggle-btn.active');
+            const logType = activeToggle ? activeToggle.getAttribute('data-type') : 'system';
+
+            const filteredLogs = allLogsData.filter(log => {
+                const user = usersData.find(u => u.id === log.user_id || u.email === log.email);
+                const role = user ? user.role.toLowerCase() : (log.email === 'system' || !log.email ? 'system' : 'unknown');
+                if (logType === 'system') {
+                    return role === 'admin' || role === 'system' || role === 'administrator';
+                } else {
+                    return role === 'instructor' || role === 'student';
+                }
+            });
+
+            if (filteredLogs.length === 0) {
+                alert(`No ${logType} logs available to export.`);
+                return;
+            }
+
+            // CSV Generation
+            const headers = ['Timestamp', 'Email/User', 'Action', 'IP Address', 'Entity Type'];
+            const csvRows = filteredLogs.map(log => [
+                new Date(log.created_at).toLocaleString().replace(',', ''),
+                log.email || 'system',
+                log.action,
+                log.ip_address || 'N/A',
+                log.entity_type || 'system'
+            ].map(val => `"${val}"`).join(','));
+
+            const csvContent = [headers.join(','), ...csvRows].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const fileName = `ELMS_${logType.toUpperCase()}_LOGS_${new Date().toISOString().slice(0, 10)}.csv`;
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
     }
 
     function updateChartsWithData(deptBreakdown) {

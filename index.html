@@ -281,7 +281,7 @@
                         <div class="card-header border-bottom">
                             <h3>Recent System Events</h3>
                             <button class="btn btn-secondary btn-sm"
-                                onclick="document.querySelector('.nav-item[data-target=\'system-logs\']').click()">View
+                                onclick="document.querySelector('.nav-item[data-target=\'logs\']').click()">View
                                 All</button>
                         </div>
                         <div class="feed-list" id="dashboard-feed-list">
@@ -403,10 +403,11 @@
                             <thead>
                                 <tr>
                                     <th class="checkbox-col" style="width: 40px;"></th>
-                                    <th style="width: 30%; white-space: nowrap;">Name</th>
-                                    <th style="width: 28%;">Email</th>
-                                    <th style="width: 12%;">Role</th>
-                                    <th style="width: 20%;">Department</th>
+                                    <th style="width: 25%; white-space: nowrap;">Name</th>
+                                    <th style="width: 20%;">Email</th>
+                                    <th style="width: 10%;">Role</th>
+                                    <th style="width: 15%;">Department</th>
+                                    <th style="width: 15%;">IP Address</th>
                                     <th style="width: 10%; white-space: nowrap;">Status</th>
                                 </tr>
                             </thead>
@@ -857,8 +858,13 @@
                 <!-- Logs Section -->
                 <section id="logs" class="view-section">
                     <div class="section-header">
-                        <h2>System Activity Logs</h2>
-                        <button class="btn btn-secondary">
+                        <h2>Activity Logs</h2>
+                        <div class="toggle-group chart-toggles" id="log-type-toggles"
+                            style="margin-left: 20px; flex: 1;">
+                            <button class="toggle-btn active" data-type="system">System Logs</button>
+                            <button class="toggle-btn" data-type="user">User Logs</button>
+                        </div>
+                        <button class="btn btn-secondary" id="export-logs-btn">
                             <span class="material-symbols-outlined">download</span>
                             Export Logs
                         </button>
