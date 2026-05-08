@@ -111,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchCalendars();
         updateDashboardStats();
         fetchLogs();
+        fetchSystemMessages();
     }
 
     // (Moved init call to the bottom of the script)
@@ -161,6 +162,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (target === 'settings') {
                     fetchSystemSettings();
+                }
+
+                if (target === 'system-messages') {
+                    fetchSystemMessages();
                 }
             }
         });
