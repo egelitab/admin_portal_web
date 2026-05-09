@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let systemConfig = {}; // Store system-wide configuration
     let usersData = [];
     let allLogsData = [];
+    let currentOnlineUsers = [];
 
     let selectedScheduleFaculties = ["All Faculties"];
     let selectedScheduleDepartments = ["All Departments"];
@@ -1018,6 +1019,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.success) {
                 const stats = result.data;
 
+                // Store globally for other views
+                if (stats.onlineUsers) {
+                    currentOnlineUsers = stats.onlineUsers;
+                }
+
                 // Update by ID for precision
                 const totalUsersValue = document.getElementById('total-users-value');
                 if (totalUsersValue) totalUsersValue.textContent = stats.totalUsers.toLocaleString();
@@ -1142,60 +1148,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (activeUsersCard) {
         activeUsersCard.addEventListener('click', async () => {
-            // Force table state to loading while we fetch real active users
-            if (onlineCountFooter) onlineCountFooter.textContent = 'Loading precise online data...';
-
-            let realActiveUserIds = new Set();
-            try {
-                // Fetch recent logs to determine EXACTLY who is active
-                const logsRes = await authFetch(`${API_BASE_URL}/system/logs`);
-                const logsData = await logsRes.json();
-                if (logsData.success) {
-                    const activeTimeLimit = new Date(Date.now() - 15 * 60 * 1000); // 15 mins window
-                    logsData.data.forEach(log => {
-                        if (new Date(log.created_at) > activeTimeLimit && log.user_id) {
-                            realActiveUserIds.add(log.user_id);
-                        }
-                    });
-                }
-            } catch (err) {
-                console.error("Error fetching real time active logs:", err);
-            }
-
-            // Include users derived from real API activity, along with any backend-flagged is_online 
-            const onlineUsers = usersData.filter(u => u.is_online || realActiveUserIds.has(u.id) || (u.isOnline && u.role.toLowerCase() === 'admin')); // Keep some admins online for demo
-
-            // Ensure we show any explicitly selected active users (if mocked for demo purposes)
-            // But if we found real users, prioritize them + students!
-            if (realActiveUserIds.size > 0) {
-                usersData.forEach(u => {
-                    if (realActiveUserIds.has(u.id)) {
-                        u.isOnline = true;
-                        if (!onlineUsers.includes(u)) onlineUsers.push(u);
-                    }
-                });
-            }
+            // Refresh stats to get latest online users from backend
+            if (onlineCountFooter) onlineCountFooter.textContent = 'Updating live status...';
+            await updateDashboardStats();
 
             if (onlineUsersTableBody) {
                 onlineUsersTableBody.innerHTML = '';
-                if (onlineUsers.length === 0) {
+                if (currentOnlineUsers.length === 0) {
                     if (onlineUsersEmpty) onlineUsersEmpty.style.display = 'block';
                     if (onlineUsersTableBody.closest('.table-card')) onlineUsersTableBody.closest('.table-card').style.display = 'none';
                 } else {
                     if (onlineUsersEmpty) onlineUsersEmpty.style.display = 'none';
                     if (onlineUsersTableBody.closest('.table-card')) onlineUsersTableBody.closest('.table-card').style.display = 'block';
 
-                    onlineUsers.forEach(user => {
+                    currentOnlineUsers.forEach(user => {
+                        const roleClass = user.role === 'admin' ? 'role-admin' : (user.role === 'instructor' ? 'role-instructor' : 'role-student');
+                        const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td style="padding-left: 20px;">
                                 <div class="user-info-cell">
-                                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=${user.avatarBg}&color=${user.avatarColor}&rounded=true" alt="Avatar" class="avatar-sm">
-                                    <span class="user-name">${user.name}</span>
+                                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=dcfce7&color=166534&rounded=true" alt="Avatar" class="avatar-sm">
+                                    <span class="user-name">${fullName}</span>
                                 </div>
                             </td>
-                            <td><span class="badge ${user.roleClass}">${user.role}</span></td>
-                            <td class="text-muted">${user.dept}</td>
+                            <td><span class="badge ${roleClass}">${user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span></td>
+                            <td class="text-muted">${user.department || '-'}</td>
                             <td style="text-align: center;"><span class="badge status-online">Online</span></td>
                         `;
                         onlineUsersTableBody.appendChild(tr);
@@ -1203,7 +1182,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             if (onlineCountFooter) {
-                onlineCountFooter.textContent = `${onlineUsers.length} Users Online`;
+                onlineCountFooter.textContent = `${currentOnlineUsers.length} Users Online`;
             }
             if (onlineUsersModal) onlineUsersModal.classList.add('show');
         });
